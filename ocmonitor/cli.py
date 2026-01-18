@@ -540,3 +540,7 @@ def config_set(ctx: click.Context, key: str, value: str):
 def main():
     """Entry point for the CLI application."""
     cli()
+
+
+if __name__ == "__main__":
+    main()
