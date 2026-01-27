@@ -7,59 +7,59 @@ This directory contains screenshots used in the README.md and DOCUMENTATION.md f
 ### README.md Screenshots
 
 #### `sessions-summary.png`
-- **Command**: `ocmonitor sessions ~/.local/share/opencode/storage/message`
+- **Command**: `omo-monitor sessions ~/.local/share/opencode/storage/message`
 - **Description**: Screenshot showing the sessions summary output with cost breakdown and statistics
 - **Recommended Size**: 800x600px or similar
 
 #### `model-usage-breakdown.png`
-- **Command**: `ocmonitor models ~/.local/share/opencode/storage/message`
+- **Command**: `omo-monitor models ~/.local/share/opencode/storage/message`
 - **Description**: Screenshot showing the model usage analytics with cost and usage percentages
 - **Recommended Size**: 800x600px or similar
 
 ### DOCUMENTATION.md Screenshots
 
 #### `session-analysis.png`
-- **Command**: `ocmonitor session ~/.local/share/opencode/storage/message/ses_20250118_143022`
+- **Command**: `omo-monitor session ~/.local/share/opencode/storage/message/ses_20250118_143022`
 - **Description**: Screenshot showing detailed analysis of a single session
 - **Recommended Size**: 800x600px or similar
 
 #### `sessions-summary.png`
-- **Command**: `ocmonitor sessions ~/.local/share/opencode/storage/message`
+- **Command**: `omo-monitor sessions ~/.local/share/opencode/storage/message`
 - **Description**: Screenshot showing the sessions summary with multiple sessions listed
 - **Recommended Size**: 800x600px or similar
 
 #### `daily-usage-breakdown.png`
-- **Command**: `ocmonitor daily ~/.local/share/opencode/storage/message`
+- **Command**: `omo-monitor daily ~/.local/share/opencode/storage/message`
 - **Description**: Screenshot showing daily usage breakdown with costs and token counts
 - **Recommended Size**: 800x600px or similar
 
 #### `model-usage-analysis.png`
-- **Command**: `ocmonitor models ~/.local/share/opencode/storage/message`
+- **Command**: `omo-monitor models ~/.local/share/opencode/storage/message`
 - **Description**: Screenshot showing detailed model usage analytics with percentages
 - **Recommended Size**: 800x600px or similar
 
 #### `quota-status.png`
-- **Command**: `ocmonitor daily ~/.local/share/opencode/storage/message --show-quotas`
+- **Command**: `omo-monitor daily ~/.local/share/opencode/storage/message --show-quotas`
 - **Description**: Screenshot showing quota status with usage percentages and warnings
 - **Recommended Size**: 800x600px or similar
 
 #### `configuration.png`
-- **Command**: `ocmonitor config show`
+- **Command**: `omo-monitor config show`
 - **Description**: Screenshot showing the complete configuration display
 - **Recommended Size**: 800x600px or similar
 
 #### `config-validation.png`
-- **Command**: `ocmonitor config validate`
+- **Command**: `omo-monitor config validate`
 - **Description**: Screenshot showing configuration validation results
 - **Recommended Size**: 800x600px or similar
 
 #### `config-diagnosis.png`
-- **Command**: `ocmonitor config diagnose`
+- **Command**: `omo-monitor config diagnose`
 - **Description**: Screenshot showing configuration diagnosis with recommendations
 - **Recommended Size**: 800x600px or similar
 
 #### `system-info.png`
-- **Command**: `ocmonitor config system-info`
+- **Command**: `omo-monitor config system-info`
 - **Description**: Screenshot showing system information for bug reports
 - **Recommended Size**: 800x600px or similar
 

@@ -1,2 +1,2 @@
-include ocmonitor/*.toml
-include ocmonitor/*.json
+include omo_monitor/*.toml
+include omo_monitor/*.json

@@ -37,15 +37,15 @@ Transform your OpenCode usage data into beautiful, actionable insights with comp
 
 **Option 1: Automated Installation (Recommended)**
 ```bash
-git clone https://github.com/yourusername/ocmonitor.git
-cd ocmonitor
+git clone https://github.com/yourusername/omo-monitor.git
+cd omo-monitor
 ./install.sh
 ```
 
 **Option 2: Manual Installation**
 ```bash
-git clone https://github.com/yourusername/ocmonitor.git
-cd ocmonitor
+git clone https://github.com/yourusername/omo-monitor.git
+cd omo-monitor
 python3 -m pip install -r requirements.txt
 python3 -m pip install -e .
 ```
@@ -54,19 +54,19 @@ python3 -m pip install -e .
 
 ```bash
 # Quick configuration check
-ocmonitor config show
+omo-monitor config show
 
 # Analyze your sessions
-ocmonitor sessions ~/.local/share/opencode/storage/message
+omo-monitor sessions ~/.local/share/opencode/storage/message
 
 # Analyze by project
-ocmonitor projects ~/.local/share/opencode/storage/message
+omo-monitor projects ~/.local/share/opencode/storage/message
 
 # Real-time monitoring
-ocmonitor live ~/.local/share/opencode/storage/message
+omo-monitor live ~/.local/share/opencode/storage/message
 
 # Export your data
-ocmonitor export sessions ~/.local/share/opencode/storage/message --format csv
+omo-monitor export sessions ~/.local/share/opencode/storage/message --format csv
 ```
 
 ## 📖 Documentation
@@ -110,22 +110,22 @@ ocmonitor export sessions ~/.local/share/opencode/storage/message --format csv
 
 ### Time-Based Reporting
 
-#### `ocmonitor daily|weekly|monthly <path> [--breakdown]`
+#### `omo-monitor daily|weekly|monthly <path> [--breakdown]`
 
 Time-based usage breakdown with optional per-model cost analysis.
 
 ```bash
 # Daily breakdown
-ocmonitor daily ~/.local/share/opencode/storage/message
+omo-monitor daily ~/.local/share/opencode/storage/message
 
 # Weekly breakdown with per-model breakdown
-ocmonitor weekly ~/.local/share/opencode/storage/message --breakdown
+omo-monitor weekly ~/.local/share/opencode/storage/message --breakdown
 
 # Monthly breakdown
-ocmonitor monthly ~/.local/share/opencode/storage/message
+omo-monitor monthly ~/.local/share/opencode/storage/message
 
 # Weekly with custom start day
-ocmonitor weekly ~/.local/share/opencode/storage/message --start-day friday --breakdown
+omo-monitor weekly ~/.local/share/opencode/storage/message --start-day friday --breakdown
 ```
 
 **`--breakdown` Flag:** Shows token consumption and cost per model within each time period (daily/weekly/monthly), making it easy to see which models are consuming resources.
@@ -134,16 +134,16 @@ Supported days: `monday`, `tuesday`, `wednesday`, `thursday`, `friday`, `saturda
 
 ### Live Monitoring Commands
 
-#### `ocmonitor live <path>`
+#### `omo-monitor live <path>`
 
 Real-time monitoring dashboard that updates automatically.
 
 ```bash
 # Start live monitoring (updates every 5 seconds)
-ocmonitor live ~/.local/share/opencode/storage/message
+omo-monitor live ~/.local/share/opencode/storage/message
 
 # Custom refresh interval (in seconds)
-ocmonitor live ~/.local/share/opencode/storage/message --refresh 10
+omo-monitor live ~/.local/share/opencode/storage/message --refresh 10
 ```
 
 **Features:**
@@ -170,14 +170,14 @@ ocmonitor live ~/.local/share/opencode/storage/message --refresh 10
 
 ### Configuration File Location
 
-Create your configuration file at: **`~/.config/ocmonitor/config.toml`**
+Create your configuration file at: **`~/.config/omo_monitor/config.toml`**
 
 ```bash
 # Create the configuration directory
-mkdir -p ~/.config/ocmonitor
+mkdir -p ~/.config/omo-monitor
 
 # Create your configuration file
-touch ~/.config/ocmonitor/config.toml
+touch ~/.config/omo_monitor/config.toml
 ```
 
 ### Configuration Options
@@ -200,7 +200,7 @@ include_metadata = true
 ```
 
 **Configuration File Search Order:**
-1. `~/.config/ocmonitor/config.toml` (recommended user location)
+1. `~/.config/omo_monitor/config.toml` (recommended user location)
 2. `config.toml` (current directory)
 3. Project directory fallback
 
@@ -212,8 +212,8 @@ include_metadata = true
 
 ### Setting Up Development Environment
 ```bash
-git clone https://github.com/yourusername/ocmonitor.git
-cd ocmonitor
+git clone https://github.com/yourusername/omo-monitor.git
+cd omo-monitor
 python3 -m pip install -r requirements.txt
 python3 -m pip install -e .
 ```
@@ -229,8 +229,8 @@ python3 test_simple.py
 
 ### Project Architecture
 ```
-ocmonitor/
-├── ocmonitor/              # Core package
+omo_monitor/
+├── omo_monitor/              # Core package
 │   ├── cli.py             # Command-line interface
 │   ├── config.py          # Configuration management
 │   ├── models/            # Pydantic data models

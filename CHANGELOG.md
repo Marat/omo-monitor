@@ -29,15 +29,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Supported Commands
 ```bash
-ocmonitor config show      # Display configuration
-ocmonitor session <path>   # Analyze single session
-ocmonitor sessions <path>  # Analyze all sessions  
-ocmonitor daily <path>     # Daily usage breakdown
-ocmonitor weekly <path>    # Weekly usage breakdown
-ocmonitor monthly <path>   # Monthly usage breakdown
-ocmonitor models <path>    # Model usage analytics
-ocmonitor live <path>      # Real-time monitoring
-ocmonitor export <type>    # Data export functionality
+omo-monitor config show      # Display configuration
+omo-monitor session <path>   # Analyze single session
+omo-monitor sessions <path>  # Analyze all sessions  
+omo-monitor daily <path>     # Daily usage breakdown
+omo-monitor weekly <path>    # Weekly usage breakdown
+omo-monitor monthly <path>   # Monthly usage breakdown
+omo-monitor models <path>    # Model usage analytics
+omo-monitor live <path>      # Real-time monitoring
+omo-monitor export <type>    # Data export functionality
 ```
 
 #### Supported AI Models
@@ -102,9 +102,9 @@ ocmonitor export <type>    # Data export functionality
 ## Migration from Legacy Scripts
 
 This release replaces the original three Python scripts:
-- `session_summarizer.py` → `ocmonitor sessions`
-- `token_summarizer.py` → `ocmonitor models` 
-- `live_dashboard.py` → `ocmonitor live`
+- `session_summarizer.py` → `omo-monitor sessions`
+- `token_summarizer.py` → `omo-monitor models` 
+- `live_dashboard.py` → `omo-monitor live`
 
 The new unified CLI provides all original functionality plus significant enhancements:
 - Beautiful Rich terminal interface

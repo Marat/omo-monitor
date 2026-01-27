@@ -36,8 +36,8 @@ The easiest way to install OpenCode Monitor:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/ocmonitor.git
-cd ocmonitor
+git clone https://github.com/yourusername/omo-monitor.git
+cd omo-monitor
 
 # Run the automated installer
 ./install.sh
@@ -55,8 +55,8 @@ For more control over the installation process:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/ocmonitor.git
-cd ocmonitor
+git clone https://github.com/yourusername/omo-monitor.git
+cd omo-monitor
 
 # Install Python dependencies
 python3 -m pip install -r requirements.txt
@@ -70,11 +70,11 @@ python3 -m pip install -e .
 After installation, verify everything works:
 
 ```bash
-# Check if ocmonitor is accessible
-ocmonitor --help
+# Check if omo-monitor is accessible
+omo-monitor --help
 
 # Test with sample data
-ocmonitor sessions test_sessions/
+omo-monitor sessions test_sessions/
 ```
 
 ### Configuration Setup
@@ -83,16 +83,16 @@ After installation, set up your personal configuration:
 
 ```bash
 # Create configuration directory
-mkdir -p ~/.config/ocmonitor
+mkdir -p ~/.config/omo-monitor
 
 # Copy default configuration (if available in project)
-cp config.toml ~/.config/ocmonitor/config.toml
+cp config.toml ~/.config/omo_monitor/config.toml
 
 # Or create a new configuration file
-touch ~/.config/ocmonitor/config.toml
+touch ~/.config/omo_monitor/config.toml
 
 # Edit your configuration
-nano ~/.config/ocmonitor/config.toml
+nano ~/.config/omo_monitor/config.toml
 ```
 
 Your configuration file should contain:
@@ -130,16 +130,16 @@ source ~/.bashrc  # or ~/.zshrc
 
 ```bash
 # Show current configuration
-ocmonitor config show
+omo-monitor config show
 
 # Analyze all your sessions
-ocmonitor sessions ~/.local/share/opencode/storage/message
+omo-monitor sessions ~/.local/share/opencode/storage/message
 
 # Get a weekly breakdown
-ocmonitor weekly ~/.local/share/opencode/storage/message
+omo-monitor weekly ~/.local/share/opencode/storage/message
 
 # Start live monitoring
-ocmonitor live ~/.local/share/opencode/storage/message
+omo-monitor live ~/.local/share/opencode/storage/message
 ```
 
 ### Default OpenCode Message Location
@@ -157,15 +157,15 @@ You can use this path in all commands, or configure a custom path (see [Configur
 
 ### 1. Session Analysis Commands
 
-#### `ocmonitor session <path>`
+#### `omo-monitor session <path>`
 Analyze a single coding session in detail.
 
 ```bash
 # Analyze a specific session directory
-ocmonitor session ~/.local/share/opencode/storage/message/ses_20250118_143022
+omo-monitor session ~/.local/share/opencode/storage/message/ses_20250118_143022
 
 # With JSON output
-ocmonitor session ~/.local/share/opencode/storage/message/ses_20250118_143022 --format json
+omo-monitor session ~/.local/share/opencode/storage/message/ses_20250118_143022 --format json
 ```
 
 **Example Output:**
@@ -177,18 +177,18 @@ ocmonitor session ~/.local/share/opencode/storage/message/ses_20250118_143022 --
 
 ```
 
-#### `ocmonitor sessions <path>`
+#### `omo-monitor sessions <path>`
 Analyze all sessions in a directory with summary statistics.
 
 ```bash
 # Analyze all sessions
-ocmonitor sessions ~/.local/share/opencode/storage/message
+omo-monitor sessions ~/.local/share/opencode/storage/message
 
 # Limit to recent sessions
-ocmonitor sessions ~/.local/share/opencode/storage/message --limit 10
+omo-monitor sessions ~/.local/share/opencode/storage/message --limit 10
 
 # JSON format for programmatic use
-ocmonitor sessions ~/.local/share/opencode/storage/message --format json
+omo-monitor sessions ~/.local/share/opencode/storage/message --format json
 ```
 
 **Example Output:**
@@ -201,18 +201,18 @@ ocmonitor sessions ~/.local/share/opencode/storage/message --format json
 
 ### 2. Time-Based Analysis Commands
 
-#### `ocmonitor daily <path>`
+#### `omo-monitor daily <path>`
 Daily usage breakdown with cost and token analysis.
 
 ```bash
 # Daily breakdown
-ocmonitor daily ~/.local/share/opencode/storage/message
+omo-monitor daily ~/.local/share/opencode/storage/message
 
 # With per-model breakdown
-ocmonitor daily ~/.local/share/opencode/storage/message --breakdown
+omo-monitor daily ~/.local/share/opencode/storage/message --breakdown
 
 # JSON output
-ocmonitor daily ~/.local/share/opencode/storage/message --format json
+omo-monitor daily ~/.local/share/opencode/storage/message --format json
 ```
 
 **Example Output:**
@@ -223,22 +223,22 @@ ocmonitor daily ~/.local/share/opencode/storage/message --format json
 
 ```
 
-#### `ocmonitor weekly <path> [--start-day <day>]`
+#### `omo-monitor weekly <path> [--start-day <day>]`
 Weekly usage patterns and trends with customizable week start days.
 
 ```bash
 # Default (Monday start)
-ocmonitor weekly ~/.local/share/opencode/storage/message
+omo-monitor weekly ~/.local/share/opencode/storage/message
 
 # Custom week start days
-ocmonitor weekly ~/.local/share/opencode/storage/message --start-day sunday
-ocmonitor weekly ~/.local/share/opencode/storage/message --start-day friday
+omo-monitor weekly ~/.local/share/opencode/storage/message --start-day sunday
+omo-monitor weekly ~/.local/share/opencode/storage/message --start-day friday
 
 # With per-model breakdown
-ocmonitor weekly ~/.local/share/opencode/storage/message --start-day sunday --breakdown
+omo-monitor weekly ~/.local/share/opencode/storage/message --start-day sunday --breakdown
 
 # Specific year with custom week start
-ocmonitor weekly ~/.local/share/opencode/storage/message --year 2025 --start-day wednesday
+omo-monitor weekly ~/.local/share/opencode/storage/message --year 2025 --start-day wednesday
 ```
 
 **Supported Days:** `monday`, `tuesday`, `wednesday`, `thursday`, `friday`, `saturday`, `sunday`
@@ -249,28 +249,28 @@ ocmonitor weekly ~/.local/share/opencode/storage/message --year 2025 --start-day
 - 📊 Date range display shows actual week boundaries
 - 🎯 Table title indicates selected week start day
 
-#### `ocmonitor monthly <path>`
+#### `omo-monitor monthly <path>`
 Monthly usage analysis and cost tracking.
 
 ```bash
 # Monthly breakdown
-ocmonitor monthly ~/.local/share/opencode/storage/message
+omo-monitor monthly ~/.local/share/opencode/storage/message
 
 # With per-model breakdown
-ocmonitor monthly ~/.local/share/opencode/storage/message --breakdown
+omo-monitor monthly ~/.local/share/opencode/storage/message --breakdown
 ```
 
 ### 3. Model Analysis Commands
 
-#### `ocmonitor models <path>`
+#### `omo-monitor models <path>`
 Detailed breakdown of usage per AI model.
 
 ```bash
 # Model usage statistics
-ocmonitor models ~/.local/share/opencode/storage/message
+omo-monitor models ~/.local/share/opencode/storage/message
 
 # JSON format
-ocmonitor models ~/.local/share/opencode/storage/message --format json
+omo-monitor models ~/.local/share/opencode/storage/message --format json
 ```
 
 **Example Output:**
@@ -279,21 +279,21 @@ ocmonitor models ~/.local/share/opencode/storage/message --format json
 
 *Click image to view full-size screenshot of model usage analytics*
 
-#### `ocmonitor projects <path>`
+#### `omo-monitor projects <path>`
 Analyze AI usage costs and token consumption by coding project.
 
 ```bash
 # Project usage breakdown
-ocmonitor projects ~/.local/share/opencode/storage/message
+omo-monitor projects ~/.local/share/opencode/storage/message
 
 # Filter by date range
-ocmonitor projects ~/.local/share/opencode/storage/message --start-date 2024-01-01 --end-date 2024-01-31
+omo-monitor projects ~/.local/share/opencode/storage/message --start-date 2024-01-01 --end-date 2024-01-31
 
 # JSON format for detailed analysis
-ocmonitor projects ~/.local/share/opencode/storage/message --format json
+omo-monitor projects ~/.local/share/opencode/storage/message --format json
 
 # CSV format for spreadsheet analysis
-ocmonitor projects ~/.local/share/opencode/storage/message --format csv
+omo-monitor projects ~/.local/share/opencode/storage/message --format csv
 ```
 
 **Features:**
@@ -309,7 +309,7 @@ ocmonitor projects ~/.local/share/opencode/storage/message --format csv
 ┏━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
 ┃ Project   ┃ Sessions ┃ Interactions ┃ Total Tokens ┃    Cost ┃ Models Used     ┃
 ┡━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━┩
-│ ocmonitor │        5 │           12 │       25,340 │ $0.0512 │ claude-sonnet-… │
+│ omo-monitor │        5 │           12 │       25,340 │ $0.0512 │ claude-sonnet-… │
 │ myapp     │        3 │            8 │       18,200 │ $0.0364 │ claude-opus-4   │
 │ website   │        2 │            4 │        8,150 │ $0.0163 │ grok-code       │
 └───────────┴──────────┴──────────────┴──────────────┴─────────┴─────────────────┘
@@ -322,15 +322,15 @@ ocmonitor projects ~/.local/share/opencode/storage/message --format csv
 
 ### 4. Live Monitoring Commands
 
-#### `ocmonitor live <path>`
+#### `omo-monitor live <path>`
 Real-time monitoring dashboard that updates automatically.
 
 ```bash
 # Start live monitoring (updates every 5 seconds)
-ocmonitor live ~/.local/share/opencode/storage/message
+omo-monitor live ~/.local/share/opencode/storage/message
 
 # Custom refresh interval (in seconds)
-ocmonitor live ~/.local/share/opencode/storage/message --refresh 10
+omo-monitor live ~/.local/share/opencode/storage/message --refresh 10
 ```
 
 **Features:**
@@ -353,24 +353,24 @@ ocmonitor live ~/.local/share/opencode/storage/message --refresh 10
 
 ### Configuration File Setup
 
-OpenCode Monitor uses a configuration file located at: **`~/.config/ocmonitor/config.toml`**
+OpenCode Monitor uses a configuration file located at: **`~/.config/omo_monitor/config.toml`**
 
 #### Create Configuration File
 
 ```bash
 # Create the configuration directory
-mkdir -p ~/.config/ocmonitor
+mkdir -p ~/.config/omo-monitor
 
 # Create your configuration file
-touch ~/.config/ocmonitor/config.toml
+touch ~/.config/omo_monitor/config.toml
 ```
 
 #### Configuration File Search Order
 
 OpenCode Monitor searches for configuration files in this order:
-1. **`~/.config/ocmonitor/config.toml`** (recommended user location)
+1. **`~/.config/omo_monitor/config.toml`** (recommended user location)
 2. `config.toml` (current working directory)
-3. `ocmonitor.toml` (current working directory)
+3. `omo-monitor.toml` (current working directory)
 4. Project directory fallback
 
 ### Setting Custom Message Path
@@ -379,7 +379,7 @@ OpenCode Monitor can be configured to use custom paths for your message data.
 
 #### Method 1: Edit Configuration File
 
-Edit your `~/.config/ocmonitor/config.toml` file:
+Edit your `~/.config/omo_monitor/config.toml` file:
 
 ```toml
 [paths]
@@ -398,7 +398,7 @@ Set the path via environment variable:
 export OCMONITOR_MESSAGES_DIR="/custom/path/to/messages"
 
 # Use in commands
-ocmonitor sessions
+omo-monitor sessions
 ```
 
 #### Method 3: Command Line Override
@@ -407,12 +407,12 @@ Override the path for individual commands:
 
 ```bash
 # Use custom path for this command only
-ocmonitor sessions /custom/path/to/messages
+omo-monitor sessions /custom/path/to/messages
 ```
 
 ### Full Configuration Options
 
-Here's a complete `~/.config/ocmonitor/config.toml` with all available options:
+Here's a complete `~/.config/omo_monitor/config.toml` with all available options:
 
 ```toml
 # OpenCode Monitor Configuration
@@ -540,10 +540,10 @@ Test that your new model is recognized:
 
 ```bash
 # Check if the model appears in configuration
-ocmonitor config show
+omo-monitor config show
 
 # Test with session data that uses the new model
-ocmonitor sessions /path/to/sessions
+omo-monitor sessions /path/to/sessions
 ```
 
 #### Step 3: Handle Fully Qualified Names
@@ -657,7 +657,7 @@ Quotas help you monitor and control your AI usage costs by setting spending limi
 
 #### Method 1: Configuration File
 
-Edit `~/.config/ocmonitor/config.toml` to set quota limits:
+Edit `~/.config/omo_monitor/config.toml` to set quota limits:
 
 ```toml
 [quotas]
@@ -754,10 +754,10 @@ Check your current quota usage:
 
 ```bash
 # Show quota status in daily report
-ocmonitor daily ~/.local/share/opencode/storage/message --show-quotas
+omo-monitor daily ~/.local/share/opencode/storage/message --show-quotas
 
 # Show quota status in model breakdown
-ocmonitor models ~/.local/share/opencode/storage/message --show-quotas
+omo-monitor models ~/.local/share/opencode/storage/message --show-quotas
 ```
 
 
@@ -772,7 +772,7 @@ OpenCode Monitor provides powerful export capabilities for creating reports and 
 ### Basic Export Syntax
 
 ```bash
-ocmonitor export <report_type> [path] [options]
+omo-monitor export <report_type> [path] [options]
 ```
 
 ### Export Types
@@ -783,66 +783,66 @@ Export detailed session data:
 
 ```bash
 # Export all sessions to CSV
-ocmonitor export sessions ~/.local/share/opencode/storage/message --format csv --output sessions_report.csv
+omo-monitor export sessions ~/.local/share/opencode/storage/message --format csv --output sessions_report.csv
 
 # Export to JSON
-ocmonitor export sessions ~/.local/share/opencode/storage/message --format json --output sessions_data.json
+omo-monitor export sessions ~/.local/share/opencode/storage/message --format json --output sessions_data.json
 
 # Export recent sessions only
-ocmonitor export sessions ~/.local/share/opencode/storage/message --limit 50 --format csv
+omo-monitor export sessions ~/.local/share/opencode/storage/message --limit 50 --format csv
 ```
 
 #### 2. Daily Reports Export
 
 ```bash
 # Export daily breakdown
-ocmonitor export daily ~/.local/share/opencode/storage/message --format csv --output daily_usage.csv
+omo-monitor export daily ~/.local/share/opencode/storage/message --format csv --output daily_usage.csv
 
 # Last 30 days
-ocmonitor export daily ~/.local/share/opencode/storage/message --days 30 --format json
+omo-monitor export daily ~/.local/share/opencode/storage/message --days 30 --format json
 ```
 
 #### 3. Weekly Reports Export
 
 ```bash
 # Export weekly data
-ocmonitor export weekly ~/.local/share/opencode/storage/message --format csv --output weekly_report.csv
+omo-monitor export weekly ~/.local/share/opencode/storage/message --format csv --output weekly_report.csv
 
 # Last 12 weeks
-ocmonitor export weekly ~/.local/share/opencode/storage/message --weeks 12 --format json
+omo-monitor export weekly ~/.local/share/opencode/storage/message --weeks 12 --format json
 ```
 
 #### 4. Monthly Reports Export
 
 ```bash
 # Export monthly analysis
-ocmonitor export monthly ~/.local/share/opencode/storage/message --format csv --output monthly_analysis.csv
+omo-monitor export monthly ~/.local/share/opencode/storage/message --format csv --output monthly_analysis.csv
 
 # Last 6 months
-ocmonitor export monthly ~/.local/share/opencode/storage/message --months 6 --format json
+omo-monitor export monthly ~/.local/share/opencode/storage/message --months 6 --format json
 ```
 
 #### 5. Model Usage Export
 
 ```bash
 # Export model breakdown
-ocmonitor export models ~/.local/share/opencode/storage/message --format csv --output model_usage.csv
+omo-monitor export models ~/.local/share/opencode/storage/message --format csv --output model_usage.csv
 
 # JSON format with metadata
-ocmonitor export models ~/.local/share/opencode/storage/message --format json --include-metadata
+omo-monitor export models ~/.local/share/opencode/storage/message --format json --include-metadata
 ```
 
 #### 6. Project Usage Export
 
 ```bash
 # Export project breakdown
-ocmonitor export projects ~/.local/share/opencode/storage/message --format csv --output project_usage.csv
+omo-monitor export projects ~/.local/share/opencode/storage/message --format csv --output project_usage.csv
 
 # JSON format with detailed metadata
-ocmonitor export projects ~/.local/share/opencode/storage/message --format json --include-metadata
+omo-monitor export projects ~/.local/share/opencode/storage/message --format json --include-metadata
 
 # Filter by date range
-ocmonitor export projects ~/.local/share/opencode/storage/message --start-date 2024-01-01 --end-date 2024-01-31 --format csv
+omo-monitor export projects ~/.local/share/opencode/storage/message --start-date 2024-01-01 --end-date 2024-01-31 --format csv
 ```
 
 ### Export Options
@@ -864,7 +864,7 @@ ocmonitor export projects ~/.local/share/opencode/storage/message --start-date 2
 ### CSV Export Example
 
 ```bash
-ocmonitor export sessions ~/.local/share/opencode/storage/message --format csv --output sessions.csv
+omo-monitor export sessions ~/.local/share/opencode/storage/message --format csv --output sessions.csv
 ```
 
 **Generated CSV Structure:**
@@ -877,7 +877,7 @@ ses_20250118_120830,2025-01-18,12:08:30,12:53:38,45.13,claude-opus-4,4.32,18650,
 ### JSON Export Example
 
 ```bash
-ocmonitor export sessions ~/.local/share/opencode/storage/message --format json --output sessions.json --include-metadata
+omo-monitor export sessions ~/.local/share/opencode/storage/message --format json --output sessions.json --include-metadata
 ```
 
 **Generated JSON Structure:**
@@ -935,12 +935,12 @@ MESSAGES_PATH="~/.local/share/opencode/storage/message"
 mkdir -p $EXPORT_DIR
 
 # Export daily report
-ocmonitor export daily $MESSAGES_PATH \
+omo-monitor export daily $MESSAGES_PATH \
   --format csv \
   --output "$EXPORT_DIR/daily_${DATE}.csv"
 
 # Export sessions
-ocmonitor export sessions $MESSAGES_PATH \
+omo-monitor export sessions $MESSAGES_PATH \
   --format json \
   --output "$EXPORT_DIR/sessions_${DATE}.json" \
   --include-metadata
@@ -955,12 +955,12 @@ echo "Reports exported to $EXPORT_DIR/"
 # weekly_report.sh
 
 WEEK=$(date +%Y_W%U)
-ocmonitor export weekly ~/.local/share/opencode/storage/message \
+omo-monitor export weekly ~/.local/share/opencode/storage/message \
   --format csv \
   --output "weekly_report_${WEEK}.csv" \
   --weeks 1
 
-ocmonitor export models ~/.local/share/opencode/storage/message \
+omo-monitor export models ~/.local/share/opencode/storage/message \
   --format csv \
   --output "model_usage_${WEEK}.csv"
 ```
@@ -969,7 +969,7 @@ ocmonitor export models ~/.local/share/opencode/storage/message \
 
 ## 🔧 Configuration Commands
 
-### `ocmonitor config` Command Reference
+### `omo-monitor config` Command Reference
 
 The configuration command helps you manage and view your OpenCode Monitor settings.
 
@@ -979,7 +979,7 @@ The configuration command helps you manage and view your OpenCode Monitor settin
 
 ```bash
 # Display complete configuration
-ocmonitor config show
+omo-monitor config show
 ```
 
 
@@ -1017,13 +1017,13 @@ ocmonitor config show
 
 ```bash
 # Show only paths configuration
-ocmonitor config show --section paths
+omo-monitor config show --section paths
 
 # Show UI settings
-ocmonitor config show --section ui
+omo-monitor config show --section ui
 
 # Show model configuration
-ocmonitor config show --section models
+omo-monitor config show --section models
 ```
 
 ### Validating Configuration
@@ -1032,7 +1032,7 @@ ocmonitor config show --section models
 
 ```bash
 # Validate configuration files
-ocmonitor config validate
+omo-monitor config validate
 ```
 
 **Example Output:**
@@ -1060,7 +1060,7 @@ ocmonitor config validate
 
 ```bash
 # Comprehensive configuration diagnosis
-ocmonitor config diagnose
+omo-monitor config diagnose
 ```
 
 **Example Output:**
@@ -1095,30 +1095,30 @@ ocmonitor config diagnose
 
 ```bash
 # Set messages directory
-ocmonitor config set paths.messages_dir "/custom/path/to/messages"
+omo-monitor config set paths.messages_dir "/custom/path/to/messages"
 
 # Set default export format
-ocmonitor config set export.default_format "json"
+omo-monitor config set export.default_format "json"
 
 # Enable/disable UI features
-ocmonitor config set ui.colors true
-ocmonitor config set ui.progress_bars false
+omo-monitor config set ui.colors true
+omo-monitor config set ui.progress_bars false
 
 # Set live refresh interval
-ocmonitor config set ui.live_refresh_interval 10
+omo-monitor config set ui.live_refresh_interval 10
 ```
 
 #### Reset Configuration
 
 ```bash
 # Reset to default configuration
-ocmonitor config reset
+omo-monitor config reset
 
 # Reset specific section
-ocmonitor config reset --section ui
+omo-monitor config reset --section ui
 
 # Backup current config before reset
-ocmonitor config reset --backup
+omo-monitor config reset --backup
 ```
 
 ### Configuration File Locations
@@ -1127,7 +1127,7 @@ ocmonitor config reset --backup
 
 ```bash
 # Show configuration file paths
-ocmonitor config paths
+omo-monitor config paths
 ```
 
 **Example Output:**
@@ -1135,7 +1135,7 @@ ocmonitor config paths
 📁 Configuration File Locations:
 
 Primary Configuration:
-   File: ~/.config/ocmonitor/config.toml
+   File: ~/.config/omo_monitor/config.toml
    Status: ✅ Found (recommended location)
 
 Project Configuration:
@@ -1167,7 +1167,7 @@ export OCMONITOR_UI_COLORS="false"
 export OCMONITOR_UI_TABLE_STYLE="simple"
 
 # Use the overrides
-ocmonitor config show
+omo-monitor config show
 ```
 
 ---
@@ -1176,9 +1176,9 @@ ocmonitor config show
 
 ### Common Issues and Solutions
 
-#### 1. Command Not Found: `ocmonitor`
+#### 1. Command Not Found: `omo-monitor`
 
-**Problem:** Terminal shows `command not found: ocmonitor`
+**Problem:** Terminal shows `command not found: omo-monitor`
 
 **Solutions:**
 
@@ -1196,10 +1196,10 @@ export PATH="$(python3 -m site --user-base)/bin:$PATH"
 source ~/.bashrc  # or ~/.zshrc
 
 # Alternative: Use full path
-python3 /path/to/ocmonitor/run_ocmonitor.py --help
+python3 /path/to/omo_monitor/run_omo-monitor.py --help
 
 # Alternative: Reinstall in development mode
-cd /path/to/ocmonitor
+cd /path/to/omo-monitor
 python3 -m pip install -e .
 ```
 
@@ -1269,10 +1269,10 @@ find ~ -name "opencode" -type d 2>/dev/null
 opencode config list 2>/dev/null | grep storage
 
 # Set custom path if different location
-ocmonitor config set paths.messages_dir "/actual/path/to/messages"
+omo-monitor config set paths.messages_dir "/actual/path/to/messages"
 
 # Verify path is accessible
-ocmonitor config validate
+omo-monitor config validate
 ```
 
 #### 5. JSON Parsing Errors
@@ -1291,10 +1291,10 @@ find ~/.local/share/opencode/storage/message -name "*.json" -print0 | while IFS=
 done
 
 # Test with specific session
-ocmonitor session ~/.local/share/opencode/storage/message/problematic_session
+omo-monitor session ~/.local/share/opencode/storage/message/problematic_session
 
 # Use verbose mode for debugging
-ocmonitor sessions ~/.local/share/opencode/storage/message --verbose
+omo-monitor sessions ~/.local/share/opencode/storage/message --verbose
 ```
 
 #### 6. Permission Errors
@@ -1315,7 +1315,7 @@ mkdir -p ./exports
 touch ./exports/test.txt && rm ./exports/test.txt
 
 # Use alternative export directory
-ocmonitor config set export.export_dir "/tmp/ocmonitor-exports"
+omo-monitor config set export.export_dir "/tmp/omo-monitor-exports"
 ```
 
 #### 7. Model Not Recognized
@@ -1326,7 +1326,7 @@ ocmonitor config set export.export_dir "/tmp/ocmonitor-exports"
 
 ```bash
 # Check which models are configured
-ocmonitor config show --section models
+omo-monitor config show --section models
 
 # View current models.json
 cat models.json
@@ -1338,7 +1338,7 @@ grep -r "model.*:" ~/.local/share/opencode/storage/message | grep -v claude | gr
 # Edit models.json and add the new model configuration
 
 # Validate models configuration
-ocmonitor config validate
+omo-monitor config validate
 ```
 
 #### 8. Export Failures
@@ -1349,16 +1349,16 @@ ocmonitor config validate
 
 ```bash
 # Test export with verbose output
-ocmonitor export sessions ~/.local/share/opencode/storage/message --format csv --output test.csv --verbose
+omo-monitor export sessions ~/.local/share/opencode/storage/message --format csv --output test.csv --verbose
 
 # Check export directory permissions
 ls -la ./exports
 
 # Try different export format
-ocmonitor export sessions ~/.local/share/opencode/storage/message --format json --output test.json
+omo-monitor export sessions ~/.local/share/opencode/storage/message --format json --output test.json
 
 # Test with limited data
-ocmonitor export sessions ~/.local/share/opencode/storage/message --limit 5 --format csv
+omo-monitor export sessions ~/.local/share/opencode/storage/message --limit 5 --format csv
 
 # Check disk space
 df -h .
@@ -1370,18 +1370,18 @@ df -h .
 
 ```bash
 # Run any command with verbose output
-ocmonitor sessions ~/.local/share/opencode/storage/message --verbose
+omo-monitor sessions ~/.local/share/opencode/storage/message --verbose
 
 # Set debug environment variable
 export OCMONITOR_DEBUG=1
-ocmonitor sessions ~/.local/share/opencode/storage/message
+omo-monitor sessions ~/.local/share/opencode/storage/message
 ```
 
 #### Check System Information
 
 ```bash
 # Show system information for bug reports
-ocmonitor config system-info
+omo-monitor config system-info
 ```
 
 
@@ -1422,14 +1422,14 @@ When reporting issues, include:
 
 1. **System Information:**
    ```bash
-   ocmonitor config system-info
+   omo-monitor config system-info
    ```
 
 2. **Error Messages:** Full error output with `--verbose` flag
 
 3. **Configuration:**
    ```bash
-   ocmonitor config show
+   omo-monitor config show
    ```
 
 4. **Steps to Reproduce:** Exact commands that cause the issue
@@ -1448,13 +1448,13 @@ The `--breakdown` flag adds per-model token consumption and cost details to dail
 
 ```bash
 # Show model breakdown in daily report
-ocmonitor daily ~/.local/share/opencode/storage/message --breakdown
+omo-monitor daily ~/.local/share/opencode/storage/message --breakdown
 
 # Show model breakdown in weekly report
-ocmonitor weekly ~/.local/share/opencode/storage/message --breakdown
+omo-monitor weekly ~/.local/share/opencode/storage/message --breakdown
 
 # Show model breakdown in monthly report
-ocmonitor monthly ~/.local/share/opencode/storage/message --breakdown
+omo-monitor monthly ~/.local/share/opencode/storage/message --breakdown
 ```
 
 **Example Output:**
@@ -1486,13 +1486,13 @@ ocmonitor monthly ~/.local/share/opencode/storage/message --breakdown
 
 ```bash
 # Process large datasets efficiently
-ocmonitor sessions ~/.local/share/opencode/storage/message --limit 1000
+omo-monitor sessions ~/.local/share/opencode/storage/message --limit 1000
 
 # Use JSON format for faster processing
-ocmonitor sessions ~/.local/share/opencode/storage/message --format json | jq '.sessions | length'
+omo-monitor sessions ~/.local/share/opencode/storage/message --format json | jq '.sessions | length'
 
 # Focus on recent data
-ocmonitor daily ~/.local/share/opencode/storage/message --days 7
+omo-monitor daily ~/.local/share/opencode/storage/message --days 7
 ```
 
 #### Batch Processing
@@ -1501,7 +1501,7 @@ ocmonitor daily ~/.local/share/opencode/storage/message --days 7
 # Process multiple directories
 for dir in /path/to/project1/messages /path/to/project2/messages; do
     echo "Processing $dir"
-    ocmonitor sessions "$dir" --format csv --output "$(basename $dir)_report.csv"
+    omo-monitor sessions "$dir" --format csv --output "$(basename $dir)_report.csv"
 done
 ```
 
@@ -1513,7 +1513,7 @@ done
 #!/bin/bash
 # Monthly cost check script
 
-COST=$(ocmonitor monthly ~/.local/share/opencode/storage/message --format json | jq '.summary.total_cost')
+COST=$(omo-monitor monthly ~/.local/share/opencode/storage/message --format json | jq '.summary.total_cost')
 LIMIT=100.0
 
 if (( $(echo "$COST > $LIMIT" | bc -l) )); then
@@ -1526,13 +1526,13 @@ fi
 
 ```bash
 # Export for data analysis
-ocmonitor export sessions ~/.local/share/opencode/storage/message \
+omo-monitor export sessions ~/.local/share/opencode/storage/message \
     --format json \
     --include-raw-data \
     --output sessions.json
 
 # Export project data for analysis
-ocmonitor export projects ~/.local/share/opencode/storage/message \
+omo-monitor export projects ~/.local/share/opencode/storage/message \
     --format json \
     --include-metadata \
     --output projects.json
@@ -1574,7 +1574,7 @@ if __name__ == "__main__":
 
 Usage:
 ```bash
-ocmonitor export sessions ~/.local/share/opencode/storage/message --format json --output temp.json
+omo-monitor export sessions ~/.local/share/opencode/storage/message --format json --output temp.json
 python3 custom_export.py temp.json > custom_report.csv
 ```
 
@@ -1584,17 +1584,17 @@ Create configuration templates for different use cases:
 
 ```bash
 # Development configuration
-cp ~/.config/ocmonitor/config.toml ~/.config/ocmonitor/config.dev.toml
+cp ~/.config/omo_monitor/config.toml ~/.config/omo_monitor/config.dev.toml
 # Edit development settings
-nano ~/.config/ocmonitor/config.dev.toml
+nano ~/.config/omo_monitor/config.dev.toml
 
 # Production configuration  
-cp ~/.config/ocmonitor/config.toml ~/.config/ocmonitor/config.prod.toml
+cp ~/.config/omo_monitor/config.toml ~/.config/omo_monitor/config.prod.toml
 # Edit production settings
-nano ~/.config/ocmonitor/config.prod.toml
+nano ~/.config/omo_monitor/config.prod.toml
 
 # Use specific configuration
-OCMONITOR_CONFIG=~/.config/ocmonitor/config.dev.toml ocmonitor sessions ~/.local/share/opencode/storage/message
+OCMONITOR_CONFIG=~/.config/omo_monitor/config.dev.toml omo-monitor sessions ~/.local/share/opencode/storage/message
 ```
 
 ---

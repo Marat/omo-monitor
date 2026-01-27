@@ -5,7 +5,7 @@ import os
 
 # Read version from __init__.py
 version = {}
-with open(os.path.join("ocmonitor", "__init__.py")) as f:
+with open(os.path.join("omo_monitor", "__init__.py")) as f:
     exec(f.read(), version)
 
 # Read long description from README
@@ -15,18 +15,18 @@ if os.path.exists("README.md"):
         long_description = f.read()
 
 setup(
-    name="ocmonitor",
+    name="omo-monitor",
     version=version["__version__"],
     description="Analytics and monitoring tool for OpenCode AI coding sessions",
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="OpenCode Monitor Team",
     author_email="",
-    url="https://github.com/yourusername/ocmonitor",
+    url="https://github.com/yourusername/omo-monitor",
     packages=find_packages(),
     include_package_data=True,
     package_data={
-        "ocmonitor": ["*.toml", "*.json"],
+        "omo_monitor": ["*.toml", "*.json"],
     },
     install_requires=[
         "click>=8.0.0",
@@ -47,7 +47,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "ocmonitor=ocmonitor.cli:main",
+            "omo-monitor=omo_monitor.cli:main",
         ],
     },
     classifiers=[

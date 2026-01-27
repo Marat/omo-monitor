@@ -22,8 +22,9 @@ class ExportService:
         self.export_dir = Path(export_dir)
         self.export_dir.mkdir(parents=True, exist_ok=True)
 
-    def export_to_csv(self, data: List[Dict[str, Any]], filename: str,
-                     include_metadata: bool = True) -> str:
+    def export_to_csv(
+        self, data: List[Dict[str, Any]], filename: str, include_metadata: bool = True
+    ) -> str:
         """Export data to CSV format.
 
         Args:
@@ -42,13 +43,13 @@ class ExportService:
             raise ValueError("No data to export")
 
         # Ensure filename has .csv extension
-        if not filename.endswith('.csv'):
-            filename += '.csv'
+        if not filename.endswith(".csv"):
+            filename += ".csv"
 
         output_path = self.export_dir / filename
 
         try:
-            with open(output_path, 'w', newline='', encoding='utf-8') as csvfile:
+            with open(output_path, "w", newline="", encoding="utf-8") as csvfile:
                 # Write metadata header if requested
                 if include_metadata:
                     csvfile.write(f"# OpenCode Monitor Export\n")
@@ -84,8 +85,13 @@ class ExportService:
 
         return str(output_path)
 
-    def export_to_json(self, data: Union[List[Dict[str, Any]], Dict[str, Any]], filename: str,
-                      include_metadata: bool = True, indent: int = 2) -> str:
+    def export_to_json(
+        self,
+        data: Union[List[Dict[str, Any]], Dict[str, Any]],
+        filename: str,
+        include_metadata: bool = True,
+        indent: int = 2,
+    ) -> str:
         """Export data to JSON format.
 
         Args:
@@ -105,8 +111,8 @@ class ExportService:
             raise ValueError("No data to export")
 
         # Ensure filename has .json extension
-        if not filename.endswith('.json'):
-            filename += '.json'
+        if not filename.endswith(".json"):
+            filename += ".json"
 
         output_path = self.export_dir / filename
 
@@ -114,38 +120,45 @@ class ExportService:
         export_data = data
         if include_metadata:
             metadata = {
-                'export_info': {
-                    'generated_by': 'OpenCode Monitor',
-                    'generated_at': datetime.now().isoformat(),
-                    'version': '1.0.0'
+                "export_info": {
+                    "generated_by": "OpenCode Monitor",
+                    "generated_at": datetime.now().isoformat(),
+                    "version": "1.0.0",
                 }
             }
 
             if isinstance(data, list):
                 export_data = {
-                    'metadata': metadata,
-                    'data': data,
-                    'record_count': len(data)
+                    "metadata": metadata,
+                    "data": data,
+                    "record_count": len(data),
                 }
             elif isinstance(data, dict):
-                export_data = {
-                    'metadata': metadata,
-                    'data': data
-                }
+                export_data = {"metadata": metadata, "data": data}
 
         try:
-            with open(output_path, 'w', encoding='utf-8') as jsonfile:
-                json.dump(export_data, jsonfile, indent=indent, default=self._json_serializer,
-                         ensure_ascii=False)
+            with open(output_path, "w", encoding="utf-8") as jsonfile:
+                json.dump(
+                    export_data,
+                    jsonfile,
+                    indent=indent,
+                    default=self._json_serializer,
+                    ensure_ascii=False,
+                )
 
         except IOError as e:
             raise IOError(f"Failed to write JSON file: {e}")
 
         return str(output_path)
 
-    def export_report_data(self, report_data: Dict[str, Any], report_type: str,
-                          format_type: str, output_filename: Optional[str] = None,
-                          include_metadata: bool = True) -> str:
+    def export_report_data(
+        self,
+        report_data: Dict[str, Any],
+        report_type: str,
+        format_type: str,
+        output_filename: Optional[str] = None,
+        include_metadata: bool = True,
+    ) -> str:
         """Export report data in specified format.
 
         Args:
@@ -167,8 +180,8 @@ class ExportService:
 
         # Generate filename if not provided
         if not output_filename:
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            output_filename = f"ocmonitor_{report_type}_{timestamp}"
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            output_filename = f"omo_monitor_{report_type}_{timestamp}"
 
         # Extract exportable data based on report type
         export_data = self._extract_export_data(report_data, report_type)
@@ -178,7 +191,9 @@ class ExportService:
         else:
             return self.export_to_json(export_data, output_filename, include_metadata)
 
-    def _extract_export_data(self, report_data: Dict[str, Any], report_type: str) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
+    def _extract_export_data(
+        self, report_data: Dict[str, Any], report_type: str
+    ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
         """Extract exportable data from report data.
 
         Args:
@@ -190,23 +205,29 @@ class ExportService:
         """
         if report_type == "single_session":
             # For single session, export interaction details
-            session = report_data.get('session')
+            session = report_data.get("session")
             if session:
                 return [
                     {
-                        'session_id': session.session_id,
-                        'session_title': session.session_title,
-                        'project_name': session.project_name,
-                        'file_name': file.file_name,
-                        'model_id': file.model_id,
-                        'input_tokens': file.tokens.input,
-                        'output_tokens': file.tokens.output,
-                        'cache_write_tokens': file.tokens.cache_write,
-                        'cache_read_tokens': file.tokens.cache_read,
-                        'total_tokens': file.tokens.total,
-                        'created_time': file.time_data.created if file.time_data else None,
-                        'completed_time': file.time_data.completed if file.time_data else None,
-                        'duration_ms': file.time_data.duration_ms if file.time_data else None
+                        "session_id": session.session_id,
+                        "session_title": session.session_title,
+                        "project_name": session.project_name,
+                        "file_name": file.file_name,
+                        "model_id": file.model_id,
+                        "input_tokens": file.tokens.input,
+                        "output_tokens": file.tokens.output,
+                        "cache_write_tokens": file.tokens.cache_write,
+                        "cache_read_tokens": file.tokens.cache_read,
+                        "total_tokens": file.tokens.total,
+                        "created_time": file.time_data.created
+                        if file.time_data
+                        else None,
+                        "completed_time": file.time_data.completed
+                        if file.time_data
+                        else None,
+                        "duration_ms": file.time_data.duration_ms
+                        if file.time_data
+                        else None,
                     }
                     for file in session.files
                 ]
@@ -214,103 +235,113 @@ class ExportService:
 
         elif report_type == "sessions":
             # For sessions summary, export session-level data
-            sessions = report_data.get('sessions', [])
+            sessions = report_data.get("sessions", [])
             from ..services.session_analyzer import SessionAnalyzer
+
             # Note: This is a simplified version - in practice, we'd need the analyzer instance
             return [
                 {
-                    'session_id': session.session_id,
-                    'session_title': session.session_title,
-                    'project_name': session.project_name,
-                    'start_time': session.start_time.isoformat() if session.start_time else None,
-                    'end_time': session.end_time.isoformat() if session.end_time else None,
-                    'duration_ms': session.duration_ms,
-                    'interaction_count': session.interaction_count,
-                    'models_used': ', '.join(session.models_used),
-                    'total_input_tokens': session.total_tokens.input,
-                    'total_output_tokens': session.total_tokens.output,
-                    'total_cache_write_tokens': session.total_tokens.cache_write,
-                    'total_cache_read_tokens': session.total_tokens.cache_read,
-                    'total_tokens': session.total_tokens.total
+                    "session_id": session.session_id,
+                    "session_title": session.session_title,
+                    "project_name": session.project_name,
+                    "start_time": session.start_time.isoformat()
+                    if session.start_time
+                    else None,
+                    "end_time": session.end_time.isoformat()
+                    if session.end_time
+                    else None,
+                    "duration_ms": session.duration_ms,
+                    "interaction_count": session.interaction_count,
+                    "models_used": ", ".join(session.models_used),
+                    "total_input_tokens": session.total_tokens.input,
+                    "total_output_tokens": session.total_tokens.output,
+                    "total_cache_write_tokens": session.total_tokens.cache_write,
+                    "total_cache_read_tokens": session.total_tokens.cache_read,
+                    "total_tokens": session.total_tokens.total,
                 }
                 for session in sessions
             ]
 
         elif report_type == "daily":
             # For daily breakdown, export daily data
-            daily_usage = report_data.get('daily_usage', [])
+            daily_usage = report_data.get("daily_usage", [])
             from ..services.session_analyzer import SessionAnalyzer
+
             # Note: This would need the analyzer instance for cost calculation
             return [
                 {
-                    'date': day.date.isoformat(),
-                    'sessions_count': len(day.sessions),
-                    'total_interactions': day.total_interactions,
-                    'input_tokens': day.total_tokens.input,
-                    'output_tokens': day.total_tokens.output,
-                    'cache_write_tokens': day.total_tokens.cache_write,
-                    'cache_read_tokens': day.total_tokens.cache_read,
-                    'total_tokens': day.total_tokens.total,
-                    'models_used': ', '.join(day.models_used)
+                    "date": day.date.isoformat(),
+                    "sessions_count": len(day.sessions),
+                    "total_interactions": day.total_interactions,
+                    "input_tokens": day.total_tokens.input,
+                    "output_tokens": day.total_tokens.output,
+                    "cache_write_tokens": day.total_tokens.cache_write,
+                    "cache_read_tokens": day.total_tokens.cache_read,
+                    "total_tokens": day.total_tokens.total,
+                    "models_used": ", ".join(day.models_used),
                 }
                 for day in daily_usage
             ]
 
         elif report_type == "weekly":
             # For weekly breakdown, export weekly data
-            weekly_usage = report_data.get('weekly_usage', [])
+            weekly_usage = report_data.get("weekly_usage", [])
             return [
                 {
-                    'year': week.year,
-                    'week_number': week.week,
-                    'start_date': week.start_date.isoformat(),
-                    'end_date': week.end_date.isoformat(),
-                    'sessions_count': week.total_sessions,
-                    'total_interactions': week.total_interactions,
-                    'input_tokens': week.total_tokens.input,
-                    'output_tokens': week.total_tokens.output,
-                    'cache_write_tokens': week.total_tokens.cache_write,
-                    'cache_read_tokens': week.total_tokens.cache_read,
-                    'total_tokens': week.total_tokens.total
+                    "year": week.year,
+                    "week_number": week.week,
+                    "start_date": week.start_date.isoformat(),
+                    "end_date": week.end_date.isoformat(),
+                    "sessions_count": week.total_sessions,
+                    "total_interactions": week.total_interactions,
+                    "input_tokens": week.total_tokens.input,
+                    "output_tokens": week.total_tokens.output,
+                    "cache_write_tokens": week.total_tokens.cache_write,
+                    "cache_read_tokens": week.total_tokens.cache_read,
+                    "total_tokens": week.total_tokens.total,
                 }
                 for week in weekly_usage
             ]
 
         elif report_type == "monthly":
             # For monthly breakdown, export monthly data
-            monthly_usage = report_data.get('monthly_usage', [])
+            monthly_usage = report_data.get("monthly_usage", [])
             return [
                 {
-                    'year': month.year,
-                    'month': month.month,
-                    'sessions_count': month.total_sessions,
-                    'total_interactions': month.total_interactions,
-                    'input_tokens': month.total_tokens.input,
-                    'output_tokens': month.total_tokens.output,
-                    'cache_write_tokens': month.total_tokens.cache_write,
-                    'cache_read_tokens': month.total_tokens.cache_read,
-                    'total_tokens': month.total_tokens.total
+                    "year": month.year,
+                    "month": month.month,
+                    "sessions_count": month.total_sessions,
+                    "total_interactions": month.total_interactions,
+                    "input_tokens": month.total_tokens.input,
+                    "output_tokens": month.total_tokens.output,
+                    "cache_write_tokens": month.total_tokens.cache_write,
+                    "cache_read_tokens": month.total_tokens.cache_read,
+                    "total_tokens": month.total_tokens.total,
                 }
                 for month in monthly_usage
             ]
 
         elif report_type == "models":
             # For models breakdown, export model data
-            model_breakdown = report_data.get('model_breakdown')
+            model_breakdown = report_data.get("model_breakdown")
             if model_breakdown:
                 return [
                     {
-                        'model_name': model.model_name,
-                        'total_sessions': model.total_sessions,
-                        'total_interactions': model.total_interactions,
-                        'input_tokens': model.total_tokens.input,
-                        'output_tokens': model.total_tokens.output,
-                        'cache_write_tokens': model.total_tokens.cache_write,
-                        'cache_read_tokens': model.total_tokens.cache_read,
-                        'total_tokens': model.total_tokens.total,
-                        'total_cost': float(model.total_cost),
-                        'first_used': model.first_used.isoformat() if model.first_used else None,
-                        'last_used': model.last_used.isoformat() if model.last_used else None
+                        "model_name": model.model_name,
+                        "total_sessions": model.total_sessions,
+                        "total_interactions": model.total_interactions,
+                        "input_tokens": model.total_tokens.input,
+                        "output_tokens": model.total_tokens.output,
+                        "cache_write_tokens": model.total_tokens.cache_write,
+                        "cache_read_tokens": model.total_tokens.cache_read,
+                        "total_tokens": model.total_tokens.total,
+                        "total_cost": float(model.total_cost),
+                        "first_used": model.first_used.isoformat()
+                        if model.first_used
+                        else None,
+                        "last_used": model.last_used.isoformat()
+                        if model.last_used
+                        else None,
                     }
                     for model in model_breakdown.model_stats
                 ]
@@ -318,22 +349,26 @@ class ExportService:
 
         elif report_type == "projects":
             # For projects breakdown, export project data
-            project_breakdown = report_data.get('project_breakdown')
+            project_breakdown = report_data.get("project_breakdown")
             if project_breakdown:
                 return [
                     {
-                        'project_name': project.project_name,
-                        'total_sessions': project.total_sessions,
-                        'total_interactions': project.total_interactions,
-                        'input_tokens': project.total_tokens.input,
-                        'output_tokens': project.total_tokens.output,
-                        'cache_write_tokens': project.total_tokens.cache_write,
-                        'cache_read_tokens': project.total_tokens.cache_read,
-                        'total_tokens': project.total_tokens.total,
-                        'total_cost': float(project.total_cost),
-                        'models_used': ', '.join(project.models_used),
-                        'first_activity': project.first_activity.isoformat() if project.first_activity else None,
-                        'last_activity': project.last_activity.isoformat() if project.last_activity else None
+                        "project_name": project.project_name,
+                        "total_sessions": project.total_sessions,
+                        "total_interactions": project.total_interactions,
+                        "input_tokens": project.total_tokens.input,
+                        "output_tokens": project.total_tokens.output,
+                        "cache_write_tokens": project.total_tokens.cache_write,
+                        "cache_read_tokens": project.total_tokens.cache_read,
+                        "total_tokens": project.total_tokens.total,
+                        "total_cost": float(project.total_cost),
+                        "models_used": ", ".join(project.models_used),
+                        "first_activity": project.first_activity.isoformat()
+                        if project.first_activity
+                        else None,
+                        "last_activity": project.last_activity.isoformat()
+                        if project.last_activity
+                        else None,
                     }
                     for project in project_breakdown.project_stats
                 ]
@@ -352,13 +387,13 @@ class ExportService:
         Returns:
             Serializable representation
         """
-        if hasattr(obj, 'isoformat'):
+        if hasattr(obj, "isoformat"):
             # Handle datetime objects
             return obj.isoformat()
-        elif hasattr(obj, '__dict__'):
+        elif hasattr(obj, "__dict__"):
             # Handle objects with __dict__
             return obj.__dict__
-        elif hasattr(obj, 'model_dump'):
+        elif hasattr(obj, "model_dump"):
             # Handle Pydantic models
             return obj.model_dump()
         else:
@@ -376,29 +411,29 @@ class ExportService:
         """
         path = Path(file_path)
         if not path.exists():
-            return {'error': 'File not found'}
+            return {"error": "File not found"}
 
         try:
             stat = path.stat()
             summary = {
-                'filename': path.name,
-                'size_bytes': stat.st_size,
-                'size_human': self._format_file_size(stat.st_size),
-                'created': datetime.fromtimestamp(stat.st_ctime).isoformat(),
-                'modified': datetime.fromtimestamp(stat.st_mtime).isoformat(),
-                'format': path.suffix.lower()
+                "filename": path.name,
+                "size_bytes": stat.st_size,
+                "size_human": self._format_file_size(stat.st_size),
+                "created": datetime.fromtimestamp(stat.st_ctime).isoformat(),
+                "modified": datetime.fromtimestamp(stat.st_mtime).isoformat(),
+                "format": path.suffix.lower(),
             }
 
             # Add format-specific information
-            if path.suffix.lower() == '.csv':
+            if path.suffix.lower() == ".csv":
                 summary.update(self._get_csv_info(path))
-            elif path.suffix.lower() == '.json':
+            elif path.suffix.lower() == ".json":
                 summary.update(self._get_json_info(path))
 
             return summary
 
         except (OSError, IOError) as e:
-            return {'error': f'Failed to read file info: {e}'}
+            return {"error": f"Failed to read file info: {e}"}
 
     def _get_csv_info(self, file_path: Path) -> Dict[str, Any]:
         """Get CSV-specific information.
@@ -410,27 +445,23 @@ class ExportService:
             CSV information
         """
         try:
-            with open(file_path, 'r', encoding='utf-8') as csvfile:
+            with open(file_path, "r", encoding="utf-8") as csvfile:
                 # Count lines (excluding metadata comments)
                 lines = csvfile.readlines()
-                data_lines = [line for line in lines if not line.startswith('#')]
+                data_lines = [line for line in lines if not line.startswith("#")]
 
                 if data_lines:
                     # First non-comment line should be header
                     header_line = data_lines[0] if data_lines else ""
-                    columns = len(header_line.split(',')) if header_line else 0
+                    columns = len(header_line.split(",")) if header_line else 0
                     rows = len(data_lines) - 1  # Subtract header row
 
-                    return {
-                        'rows': rows,
-                        'columns': columns,
-                        'has_header': True
-                    }
+                    return {"rows": rows, "columns": columns, "has_header": True}
                 else:
-                    return {'rows': 0, 'columns': 0, 'has_header': False}
+                    return {"rows": 0, "columns": 0, "has_header": False}
 
         except Exception:
-            return {'rows': 'unknown', 'columns': 'unknown', 'has_header': 'unknown'}
+            return {"rows": "unknown", "columns": "unknown", "has_header": "unknown"}
 
     def _get_json_info(self, file_path: Path) -> Dict[str, Any]:
         """Get JSON-specific information.
@@ -442,33 +473,33 @@ class ExportService:
             JSON information
         """
         try:
-            with open(file_path, 'r', encoding='utf-8') as jsonfile:
+            with open(file_path, "r", encoding="utf-8") as jsonfile:
                 data = json.load(jsonfile)
 
-                info = {'valid_json': True}
+                info = {"valid_json": True}
 
                 if isinstance(data, dict):
-                    info['type'] = 'object'
-                    info['keys'] = len(data.keys())
+                    info["type"] = "object"
+                    info["keys"] = len(data.keys())
 
                     # Check for metadata
-                    if 'metadata' in data:
-                        info['has_metadata'] = True
-                        if 'data' in data:
-                            data_section = data['data']
+                    if "metadata" in data:
+                        info["has_metadata"] = True
+                        if "data" in data:
+                            data_section = data["data"]
                             if isinstance(data_section, list):
-                                info['records'] = len(data_section)
-                        elif 'record_count' in data:
-                            info['records'] = data['record_count']
+                                info["records"] = len(data_section)
+                        elif "record_count" in data:
+                            info["records"] = data["record_count"]
 
                 elif isinstance(data, list):
-                    info['type'] = 'array'
-                    info['records'] = len(data)
+                    info["type"] = "array"
+                    info["records"] = len(data)
 
                 return info
 
         except Exception:
-            return {'valid_json': False}
+            return {"valid_json": False}
 
     def _format_file_size(self, bytes_count: int) -> str:
         """Format file size in human-readable format.
@@ -506,10 +537,10 @@ class ExportService:
 
         exports = []
         for file_path in self.export_dir.iterdir():
-            if file_path.is_file() and file_path.suffix.lower() in ['.csv', '.json']:
+            if file_path.is_file() and file_path.suffix.lower() in [".csv", ".json"]:
                 summary = self.get_export_summary(str(file_path))
                 exports.append(summary)
 
         # Sort by modification time (newest first)
-        exports.sort(key=lambda x: x.get('modified', ''), reverse=True)
+        exports.sort(key=lambda x: x.get("modified", ""), reverse=True)
         return exports

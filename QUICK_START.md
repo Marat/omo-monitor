@@ -15,7 +15,7 @@ Get up and running with OpenCode Monitor in just a few minutes!
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd ocmonitor
+cd omo-monitor
 
 # Run the installation script
 ./install.sh
@@ -26,7 +26,7 @@ cd ocmonitor
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd ocmonitor
+cd omo-monitor
 
 # Install dependencies
 python3 -m pip install -r requirements.txt
@@ -43,57 +43,57 @@ source ~/.bashrc
 
 ### 1. Check Configuration
 ```bash
-ocmonitor config show
+omo-monitor config show
 ```
 
 ### 2. Analyze Your Sessions
 ```bash
 # Analyze all sessions (uses default OpenCode directory)
-ocmonitor sessions
+omo-monitor sessions
 
 # Analyze a specific session
-ocmonitor session /path/to/specific/session
+omo-monitor session /path/to/specific/session
 ```
 
 ### 3. View Different Reports
 ```bash
 # Daily usage breakdown
-ocmonitor daily
+omo-monitor daily
 
 # Model usage analytics
-ocmonitor models
+omo-monitor models
 
 # Weekly breakdown
-ocmonitor weekly
+omo-monitor weekly
 ```
 
 ### 4. Export Data
 ```bash
 # Export to CSV
-ocmonitor export sessions --format csv --output my_report.csv
+omo-monitor export sessions --format csv --output my_report.csv
 
 # Export to JSON
-ocmonitor export sessions --format json --output my_report.json
+omo-monitor export sessions --format json --output my_report.json
 ```
 
 ### 5. Real-time Monitoring
 ```bash
 # Start live dashboard
-ocmonitor live
+omo-monitor live
 ```
 
 ## 📖 Common Commands
 
 | Command | Description |
 |---------|-------------|
-| `ocmonitor --help` | Show all available commands |
-| `ocmonitor config show` | Display current configuration |
-| `ocmonitor sessions` | Analyze all sessions |
-| `ocmonitor session <path>` | Analyze a single session |
-| `ocmonitor daily` | Daily usage breakdown |
-| `ocmonitor models` | Model usage analytics |
-| `ocmonitor live` | Real-time monitoring dashboard |
-| `ocmonitor export <type> --format <csv/json>` | Export data |
+| `omo-monitor --help` | Show all available commands |
+| `omo-monitor config show` | Display current configuration |
+| `omo-monitor sessions` | Analyze all sessions |
+| `omo-monitor session <path>` | Analyze a single session |
+| `omo-monitor daily` | Daily usage breakdown |
+| `omo-monitor models` | Model usage analytics |
+| `omo-monitor live` | Real-time monitoring dashboard |
+| `omo-monitor export <type> --format <csv/json>` | Export data |
 
 ## 🎨 Output Formats
 
@@ -101,18 +101,18 @@ All commands support different output formats:
 
 ```bash
 # Rich tables (default)
-ocmonitor sessions
+omo-monitor sessions
 
 # JSON output
-ocmonitor sessions --format json
+omo-monitor sessions --format json
 
 # Export to files
-ocmonitor export sessions --format csv --output report.csv
+omo-monitor export sessions --format csv --output report.csv
 ```
 
 ## 🤔 Need Help?
 
-- Run `ocmonitor <command> --help` for specific command help
+- Run `omo-monitor <command> --help` for specific command help
 - Check `MANUAL_TEST_GUIDE.md` for comprehensive usage examples
 - File an issue on GitHub if you encounter problems
 

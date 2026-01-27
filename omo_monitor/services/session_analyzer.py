@@ -8,8 +8,18 @@ from decimal import Decimal
 
 from ..models.session import SessionData, InteractionFile, TokenUsage
 from ..models.analytics import (
-    DailyUsage, WeeklyUsage, MonthlyUsage, ModelUsageStats,
-    ModelBreakdownReport, ProjectBreakdownReport, TimeframeAnalyzer
+    DailyUsage,
+    WeeklyUsage,
+    MonthlyUsage,
+    ModelUsageStats,
+    ModelBreakdownReport,
+    ProjectBreakdownReport,
+    AgentBreakdownReport,
+    CategoryBreakdownReport,
+    SkillBreakdownReport,
+    AgentModelStats,
+    OmoReport,
+    TimeframeAnalyzer,
 )
 from ..utils.file_utils import FileProcessor
 from ..utils.time_utils import TimeUtils
@@ -39,7 +49,9 @@ class SessionAnalyzer:
         path = Path(session_path)
         return FileProcessor.load_session_data(path)
 
-    def analyze_all_sessions(self, base_path: str, limit: Optional[int] = None) -> List[SessionData]:
+    def analyze_all_sessions(
+        self, base_path: str, limit: Optional[int] = None
+    ) -> List[SessionData]:
         """Analyze all sessions in a directory.
 
         Args:
@@ -62,16 +74,16 @@ class SessionAnalyzer:
         """
         if not sessions:
             return {
-                'total_sessions': 0,
-                'total_interactions': 0,
-                'total_tokens': TokenUsage(),
-                'total_cost': Decimal('0.0'),
-                'models_used': [],
-                'date_range': 'No sessions'
+                "total_sessions": 0,
+                "total_interactions": 0,
+                "total_tokens": TokenUsage(),
+                "total_cost": Decimal("0.0"),
+                "models_used": [],
+                "date_range": "No sessions",
             }
 
         total_tokens = TokenUsage()
-        total_cost = Decimal('0.0')
+        total_cost = Decimal("0.0")
         total_interactions = 0
         models_used = set()
         start_times = []
@@ -94,24 +106,26 @@ class SessionAnalyzer:
                 end_times.append(session.end_time)
 
         # Calculate date range
-        date_range = 'Unknown'
+        date_range = "Unknown"
         if start_times and end_times:
             earliest = min(start_times)
             latest = max(end_times)
             if earliest.date() == latest.date():
-                date_range = earliest.strftime('%Y-%m-%d')
+                date_range = earliest.strftime("%Y-%m-%d")
             else:
-                date_range = f"{earliest.strftime('%Y-%m-%d')} to {latest.strftime('%Y-%m-%d')}"
+                date_range = (
+                    f"{earliest.strftime('%Y-%m-%d')} to {latest.strftime('%Y-%m-%d')}"
+                )
 
         return {
-            'total_sessions': len(sessions),
-            'total_interactions': total_interactions,
-            'total_tokens': total_tokens,
-            'total_cost': total_cost,
-            'models_used': sorted(list(models_used)),
-            'date_range': date_range,
-            'earliest_session': min(start_times) if start_times else None,
-            'latest_session': max(end_times) if end_times else None
+            "total_sessions": len(sessions),
+            "total_interactions": total_interactions,
+            "total_tokens": total_tokens,
+            "total_cost": total_cost,
+            "models_used": sorted(list(models_used)),
+            "date_range": date_range,
+            "earliest_session": min(start_times) if start_times else None,
+            "latest_session": max(end_times) if end_times else None,
         }
 
     def create_daily_breakdown(self, sessions: List[SessionData]) -> List[DailyUsage]:
@@ -125,7 +139,9 @@ class SessionAnalyzer:
         """
         return TimeframeAnalyzer.create_daily_breakdown(sessions)
 
-    def create_weekly_breakdown(self, sessions: List[SessionData], week_start_day: int = 0) -> List[WeeklyUsage]:
+    def create_weekly_breakdown(
+        self, sessions: List[SessionData], week_start_day: int = 0
+    ) -> List[WeeklyUsage]:
         """Create weekly usage breakdown.
 
         Args:
@@ -138,7 +154,9 @@ class SessionAnalyzer:
         daily_usage = self.create_daily_breakdown(sessions)
         return TimeframeAnalyzer.create_weekly_breakdown(daily_usage, week_start_day)
 
-    def create_monthly_breakdown(self, sessions: List[SessionData]) -> List[MonthlyUsage]:
+    def create_monthly_breakdown(
+        self, sessions: List[SessionData]
+    ) -> List[MonthlyUsage]:
         """Create monthly usage breakdown.
 
         Args:
@@ -151,10 +169,13 @@ class SessionAnalyzer:
         weekly_usage = TimeframeAnalyzer.create_weekly_breakdown(daily_usage)
         return TimeframeAnalyzer.create_monthly_breakdown(weekly_usage)
 
-    def create_model_breakdown(self, sessions: List[SessionData],
-                             timeframe: str = "all",
-                             start_date: Optional[date] = None,
-                             end_date: Optional[date] = None) -> ModelBreakdownReport:
+    def create_model_breakdown(
+        self,
+        sessions: List[SessionData],
+        timeframe: str = "all",
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None,
+    ) -> ModelBreakdownReport:
         """Create model usage breakdown.
 
         Args:
@@ -170,10 +191,13 @@ class SessionAnalyzer:
             sessions, self.pricing_data, timeframe, start_date, end_date
         )
 
-    def create_project_breakdown(self, sessions: List[SessionData],
-                               timeframe: str = "all",
-                               start_date: Optional[date] = None,
-                               end_date: Optional[date] = None) -> ProjectBreakdownReport:
+    def create_project_breakdown(
+        self,
+        sessions: List[SessionData],
+        timeframe: str = "all",
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None,
+    ) -> ProjectBreakdownReport:
         """Create project usage breakdown.
 
         Args:
@@ -189,9 +213,124 @@ class SessionAnalyzer:
             sessions, self.pricing_data, timeframe, start_date, end_date
         )
 
-    def filter_sessions_by_date(self, sessions: List[SessionData],
-                               start_date: Optional[date] = None,
-                               end_date: Optional[date] = None) -> List[SessionData]:
+    def create_agent_breakdown(
+        self,
+        sessions: List[SessionData],
+        timeframe: str = "all",
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None,
+    ) -> AgentBreakdownReport:
+        """Create agent usage breakdown (oh-my-opencode agents).
+
+        Args:
+            sessions: List of sessions to analyze
+            timeframe: Timeframe for analysis ("all", "daily", "weekly", "monthly")
+            start_date: Start date filter
+            end_date: End date filter
+
+        Returns:
+            AgentBreakdownReport object
+        """
+        return TimeframeAnalyzer.create_agent_breakdown(
+            sessions, self.pricing_data, timeframe, start_date, end_date
+        )
+
+    def create_category_breakdown(
+        self,
+        sessions: List[SessionData],
+        timeframe: str = "all",
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None,
+    ) -> CategoryBreakdownReport:
+        """Create delegate_task category usage breakdown.
+
+        Args:
+            sessions: List of sessions to analyze
+            timeframe: Timeframe for analysis ("all", "daily", "weekly", "monthly")
+            start_date: Start date filter
+            end_date: End date filter
+
+        Returns:
+            CategoryBreakdownReport object
+        """
+        return TimeframeAnalyzer.create_category_breakdown(
+            sessions, self.pricing_data, timeframe, start_date, end_date
+        )
+
+    def create_skill_breakdown(
+        self,
+        sessions: List[SessionData],
+        timeframe: str = "all",
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None,
+        start_datetime: Optional[datetime] = None,
+    ) -> SkillBreakdownReport:
+        """Create skill usage breakdown (oh-my-opencode skills).
+
+        Args:
+            sessions: List of sessions to analyze
+            timeframe: Timeframe for analysis ("all", "daily", "weekly", "monthly")
+            start_date: Start date filter
+            end_date: End date filter
+            start_datetime: Start datetime for precise hour filtering
+
+        Returns:
+            SkillBreakdownReport object
+        """
+        return TimeframeAnalyzer.create_skill_breakdown(
+            sessions, self.pricing_data, timeframe, start_date, end_date, start_datetime
+        )
+
+    def create_agent_model_breakdown(
+        self,
+        sessions: List[SessionData],
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None,
+    ) -> List[AgentModelStats]:
+        """Create agent × model breakdown for detailed analysis.
+
+        Args:
+            sessions: List of sessions to analyze
+            start_date: Start date filter
+            end_date: End date filter
+
+        Returns:
+            List of AgentModelStats objects
+        """
+        return TimeframeAnalyzer.create_agent_model_breakdown(
+            sessions, self.pricing_data, start_date, end_date
+        )
+
+    def create_omo_report(
+        self,
+        sessions: List[SessionData],
+        timeframe: str = "all",
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None,
+        start_datetime: Optional[datetime] = None,
+    ) -> OmoReport:
+        """Create comprehensive oh-my-opencode usage report.
+
+        Args:
+            sessions: List of sessions to analyze
+            timeframe: Timeframe for analysis
+            start_date: Start date filter
+            end_date: End date filter
+            start_datetime: Start datetime for precise hour filtering
+
+        Returns:
+            OmoReport object with all breakdowns
+        """
+        return TimeframeAnalyzer.create_omo_report(
+            sessions, self.pricing_data, timeframe, start_date, end_date, start_datetime
+        )
+
+    def filter_sessions_by_date(
+        self,
+        sessions: List[SessionData],
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None,
+    ) -> List[SessionData]:
         """Filter sessions by date range.
 
         Args:
@@ -214,7 +353,9 @@ class SessionAnalyzer:
 
         return filtered
 
-    def filter_sessions_by_model(self, sessions: List[SessionData], models: List[str]) -> List[SessionData]:
+    def filter_sessions_by_model(
+        self, sessions: List[SessionData], models: List[str]
+    ) -> List[SessionData]:
         """Filter sessions by models used.
 
         Args:
@@ -231,6 +372,37 @@ class SessionAnalyzer:
         for session in sessions:
             if any(model in session.models_used for model in models):
                 filtered.append(session)
+
+        return filtered
+
+    def filter_sessions_by_project(
+        self, sessions: List[SessionData], project: str
+    ) -> List[SessionData]:
+        """Filter sessions by project name (case-insensitive partial match).
+
+        Args:
+            sessions: List of sessions to filter
+            project: Project name or path substring to match
+
+        Returns:
+            Filtered list of sessions
+        """
+        if not project:
+            return sessions
+
+        project_lower = project.lower()
+        filtered = []
+        for session in sessions:
+            # Match against project_name or any project_path in files
+            if project_lower in session.project_name.lower():
+                filtered.append(session)
+                continue
+
+            # Also check individual file project paths for more precise matching
+            for file in session.files:
+                if file.project_path and project_lower in file.project_path.lower():
+                    filtered.append(session)
+                    break
 
         return filtered
 
@@ -259,35 +431,48 @@ class SessionAnalyzer:
         total_cost = session.calculate_total_cost(self.pricing_data)
 
         # Calculate averages
-        avg_tokens_per_interaction = session_tokens.total // session.interaction_count if session.interaction_count > 0 else 0
-        avg_cost_per_interaction = total_cost / session.interaction_count if session.interaction_count > 0 else Decimal('0.0')
+        avg_tokens_per_interaction = (
+            session_tokens.total // session.interaction_count
+            if session.interaction_count > 0
+            else 0
+        )
+        avg_cost_per_interaction = (
+            total_cost / session.interaction_count
+            if session.interaction_count > 0
+            else Decimal("0.0")
+        )
 
         # Time analysis
         time_stats = {}
         if session.start_time and session.end_time:
             time_stats = {
-                'start_time': session.start_time,
-                'end_time': session.end_time,
-                'duration_ms': session.duration_ms,
-                'total_processing_time_ms': session.total_processing_time_ms,
-                'avg_processing_time_ms': session.total_processing_time_ms // session.interaction_count if session.interaction_count > 0 else 0
+                "start_time": session.start_time,
+                "end_time": session.end_time,
+                "duration_ms": session.duration_ms,
+                "total_processing_time_ms": session.total_processing_time_ms,
+                "avg_processing_time_ms": session.total_processing_time_ms
+                // session.interaction_count
+                if session.interaction_count > 0
+                else 0,
             }
 
         return {
-            'session_id': session.session_id,
-            'interaction_count': session.interaction_count,
-            'models_used': session.models_used,
-            'total_tokens': session_tokens,
-            'total_cost': total_cost,
-            'model_breakdown': model_breakdown,
-            'averages': {
-                'tokens_per_interaction': avg_tokens_per_interaction,
-                'cost_per_interaction': avg_cost_per_interaction
+            "session_id": session.session_id,
+            "interaction_count": session.interaction_count,
+            "models_used": session.models_used,
+            "total_tokens": session_tokens,
+            "total_cost": total_cost,
+            "model_breakdown": model_breakdown,
+            "averages": {
+                "tokens_per_interaction": avg_tokens_per_interaction,
+                "cost_per_interaction": avg_cost_per_interaction,
             },
-            'time_analysis': time_stats
+            "time_analysis": time_stats,
         }
 
-    def calculate_burn_rate(self, session_path: str, timeframe_minutes: int = 5) -> float:
+    def calculate_burn_rate(
+        self, session_path: str, timeframe_minutes: int = 5
+    ) -> float:
         """Calculate token burn rate for a session.
 
         Args:
@@ -358,33 +543,45 @@ class SessionAnalyzer:
             warnings.append(f"{missing_time} interactions missing time data")
 
         # Check for unknown models
-        unknown_models = [model for model in session.models_used if model not in self.pricing_data and model != 'unknown']
+        unknown_models = [
+            model
+            for model in session.models_used
+            if model not in self.pricing_data and model != "unknown"
+        ]
         if unknown_models:
-            warnings.append(f"Unknown models with no pricing: {', '.join(unknown_models)}")
+            warnings.append(
+                f"Unknown models with no pricing: {', '.join(unknown_models)}"
+            )
 
         # Check for very high costs
         total_cost = session.calculate_total_cost(self.pricing_data)
-        if total_cost > Decimal('50.0'):  # Arbitrary threshold
+        if total_cost > Decimal("50.0"):  # Arbitrary threshold
             warnings.append(f"High session cost: ${total_cost:.2f}")
 
         # Check for extremely long interactions
         long_interactions = []
         for file in session.files:
-            if file.time_data and file.time_data.duration_ms and file.time_data.duration_ms > 300000:  # 5 minutes
+            if (
+                file.time_data
+                and file.time_data.duration_ms
+                and file.time_data.duration_ms > 300000
+            ):  # 5 minutes
                 long_interactions.append(file.file_name)
 
         if long_interactions:
-            warnings.append(f"Long interactions (>5min): {len(long_interactions)} files")
+            warnings.append(
+                f"Long interactions (>5min): {len(long_interactions)} files"
+            )
 
         return {
-            'healthy': len(issues) == 0,
-            'issues': issues,
-            'warnings': warnings,
-            'stats': {
-                'total_interactions': session.interaction_count,
-                'empty_interactions': empty_interactions,
-                'missing_time_data': missing_time,
-                'unknown_models': len(unknown_models),
-                'total_cost': total_cost
-            }
+            "healthy": len(issues) == 0,
+            "issues": issues,
+            "warnings": warnings,
+            "stats": {
+                "total_interactions": session.interaction_count,
+                "empty_interactions": empty_interactions,
+                "missing_time_data": missing_time,
+                "unknown_models": len(unknown_models),
+                "total_cost": total_cost,
+            },
         }

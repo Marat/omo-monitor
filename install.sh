@@ -1,21 +1,21 @@
 #!/bin/bash
 
-# OpenCode Monitor Installation Script
-# This script automates the installation process for OpenCode Monitor
+# OmO Monitor Installation Script
+# This script automates the installation process for OmO Monitor
 
 set -e  # Exit on any error
 
-echo "🚀 OpenCode Monitor Installation Script"
+echo "🚀 OmO Monitor Installation Script"
 echo "======================================"
 
 # Check if we're in the right directory
-if [ ! -f "setup.py" ] || [ ! -d "ocmonitor" ]; then
-    echo "❌ Error: Please run this script from the ocmonitor root directory"
-    echo "   The directory should contain setup.py and ocmonitor/ folder"
+if [ ! -f "setup.py" ] || [ ! -d "omo_monitor" ]; then
+    echo "❌ Error: Please run this script from the omo-monitor root directory"
+    echo "   The directory should contain setup.py and omo_monitor/ folder"
     exit 1
 fi
 
-echo "✅ Found ocmonitor project directory"
+echo "✅ Found omo_monitor project directory"
 
 # Check Python version
 PYTHON_VERSION=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
@@ -31,7 +31,7 @@ echo "📥 Installing dependencies..."
 python3 -m pip install -r requirements.txt
 
 # Install package in development mode
-echo "🔧 Installing ocmonitor in development mode..."
+echo "🔧 Installing omo-monitor in development mode..."
 python3 -m pip install -e .
 
 # Get the scripts directory and add to PATH instructions
@@ -59,13 +59,13 @@ fi
 
 # Test installation
 echo "🧪 Testing installation..."
-if command -v ocmonitor &> /dev/null; then
-    echo "✅ ocmonitor command is available"
-    ocmonitor --version
+if command -v omo-monitor &> /dev/null; then
+    echo "✅ omo-monitor command is available"
+    omo-monitor --version
 else
-    echo "⚠️  ocmonitor command not found in PATH"
+    echo "⚠️  omo-monitor command not found in PATH"
     echo "   You can run it directly with:"
-    echo "   $SCRIPTS_DIR/ocmonitor --help"
+    echo "   $SCRIPTS_DIR/omo-monitor --help"
 fi
 
 echo ""
@@ -73,7 +73,7 @@ echo "🎉 Installation complete!"
 echo ""
 echo "📝 Next steps:"
 echo "1. Add $SCRIPTS_DIR to your PATH if you haven't already (see instructions above)"
-echo "2. Run 'ocmonitor --help' to see available commands"
-echo "3. Run 'ocmonitor config show' to view current configuration"
+echo "2. Run 'omo-monitor --help' to see available commands"
+echo "3. Run 'omo-monitor config show' to view current configuration"
 echo ""
 echo "For more detailed usage instructions, see MANUAL_TEST_GUIDE.md"

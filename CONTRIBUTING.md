@@ -8,8 +8,8 @@ Thank you for considering contributing to OpenCode Monitor! This document provid
 
 1. **Fork and Clone**
    ```bash
-   git clone https://github.com/yourusername/ocmonitor.git
-   cd ocmonitor
+   git clone https://github.com/yourusername/omo-monitor.git
+   cd omo-monitor
    ```
 
 2. **Set Up Development Environment**
@@ -20,7 +20,7 @@ Thank you for considering contributing to OpenCode Monitor! This document provid
 
 3. **Verify Installation**
    ```bash
-   ocmonitor --help
+   omo-monitor --help
    python3 test_basic.py
    ```
 
@@ -104,7 +104,7 @@ def calculate_session_cost(session: SessionData, model_config: Dict[str, Any]) -
 The project follows a clean architecture pattern:
 
 ```
-ocmonitor/
+omo_monitor/
 ├── cli.py              # Command-line interface (Click)
 ├── config.py           # Configuration management
 ├── models/            # Pydantic data models

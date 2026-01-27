@@ -3,10 +3,14 @@
 import json
 import os
 import toml
+import yaml
 from typing import Dict, Optional
 
 from pydantic import BaseModel, Field, field_validator
 from decimal import Decimal
+
+from .models.limits import LimitsConfig, ProviderLimit, ModelLimit
+
 
 def opencode_storage_path(path: str | None = None) -> str:
     base = os.getenv("XDG_DATA_HOME") or "~/.local/share"
@@ -18,11 +22,12 @@ def opencode_storage_path(path: str | None = None) -> str:
 
 class PathsConfig(BaseModel):
     """Configuration for file paths."""
+
     messages_dir: str = Field(default=opencode_storage_path("message"))
     opencode_storage_dir: str = Field(default=opencode_storage_path())
     export_dir: str = Field(default="./exports")
 
-    @field_validator('messages_dir', 'opencode_storage_dir', 'export_dir')
+    @field_validator("messages_dir", "opencode_storage_dir", "export_dir")
     @classmethod
     def expand_path(cls, v):
         """Expand user paths and environment variables."""
@@ -31,14 +36,22 @@ class PathsConfig(BaseModel):
 
 class UIConfig(BaseModel):
     """Configuration for UI appearance."""
+
     table_style: str = Field(default="rich", pattern="^(rich|simple|minimal)$")
     progress_bars: bool = Field(default=True)
     colors: bool = Field(default=True)
-    live_refresh_interval: int = Field(default=5, ge=1, le=60)
+    live_refresh_interval: int = Field(default=10, ge=1, le=60)
+    session_max_hours: float = Field(
+        default=5.0,
+        ge=1.0,
+        le=24.0,
+        description="Maximum session duration for progress bar (hours)",
+    )
 
 
 class ExportConfig(BaseModel):
     """Configuration for data export."""
+
     default_format: str = Field(default="csv", pattern="^(csv|json)$")
     include_metadata: bool = Field(default=True)
     include_raw_data: bool = Field(default=False)
@@ -46,17 +59,20 @@ class ExportConfig(BaseModel):
 
 class ModelsConfig(BaseModel):
     """Configuration for model pricing."""
+
     config_file: str = Field(default="models.json")
 
 
 class AnalyticsConfig(BaseModel):
     """Configuration for analytics."""
+
     default_timeframe: str = Field(default="daily", pattern="^(daily|weekly|monthly)$")
     recent_sessions_limit: int = Field(default=50, ge=1, le=1000)
 
 
 class Config(BaseModel):
     """Main configuration class."""
+
     paths: PathsConfig = Field(default_factory=PathsConfig)
     ui: UIConfig = Field(default_factory=UIConfig)
     export: ExportConfig = Field(default_factory=ExportConfig)
@@ -66,12 +82,21 @@ class Config(BaseModel):
 
 class ModelPricing(BaseModel):
     """Model for pricing information."""
+
     input: Decimal = Field(description="Cost per 1M input tokens")
     output: Decimal = Field(description="Cost per 1M output tokens")
-    cache_write: Decimal = Field(alias="cacheWrite", description="Cost per 1M cache write tokens")
-    cache_read: Decimal = Field(alias="cacheRead", description="Cost per 1M cache read tokens")
-    context_window: int = Field(alias="contextWindow", description="Maximum context window size")
-    session_quota: Decimal = Field(alias="sessionQuota", description="Maximum session cost quota")
+    cache_write: Decimal = Field(
+        alias="cacheWrite", description="Cost per 1M cache write tokens"
+    )
+    cache_read: Decimal = Field(
+        alias="cacheRead", description="Cost per 1M cache read tokens"
+    )
+    context_window: int = Field(
+        alias="contextWindow", description="Maximum context window size"
+    )
+    session_quota: Decimal = Field(
+        alias="sessionQuota", description="Maximum session cost quota"
+    )
 
 
 class ConfigManager:
@@ -86,14 +111,15 @@ class ConfigManager:
         self.config_path = config_path or self._find_config_file()
         self._config: Optional[Config] = None
         self._pricing_data: Optional[Dict[str, ModelPricing]] = None
+        self._limits_config: Optional[LimitsConfig] = None
 
     def _find_config_file(self) -> str:
         """Find configuration file in standard locations."""
         search_paths = [
             os.path.join(os.path.dirname(__file__), "config.toml"),
-            os.path.expanduser("~/.config/ocmonitor/config.toml"),
+            os.path.expanduser("~/.config/omo-monitor/config.toml"),
             "config.toml",
-            "ocmonitor.toml",
+            "omo_monitor.toml",
         ]
 
         for path in search_paths:
@@ -117,7 +143,7 @@ class ConfigManager:
             return Config()
 
         try:
-            with open(self.config_path, 'r') as f:
+            with open(self.config_path, "r") as f:
                 config_data = toml.load(f)
             return Config(**config_data)
         except (toml.TomlDecodeError, ValueError) as e:
@@ -146,7 +172,7 @@ class ConfigManager:
             return {}
 
         try:
-            with open(models_file, 'r') as f:
+            with open(models_file, "r") as f:
                 raw_data = json.load(f)
 
             pricing_data = {}
@@ -166,6 +192,72 @@ class ConfigManager:
         """Reload configuration and pricing data."""
         self._config = None
         self._pricing_data = None
+        self._limits_config = None
+
+    def _find_limits_file(self) -> Optional[str]:
+        """Find limits configuration file."""
+        search_paths = [
+            os.path.expanduser("~/.config/omo-monitor/limits.yaml"),
+            os.path.join(os.path.dirname(self.config_path), "limits.yaml"),
+            os.path.join(os.path.dirname(__file__), "limits.yaml"),
+            "limits.yaml",
+        ]
+
+        for path in search_paths:
+            if os.path.exists(path):
+                return path
+        return None
+
+    def load_limits_config(self) -> Optional[LimitsConfig]:
+        """Load subscription limits configuration."""
+        if self._limits_config is None:
+            self._limits_config = self._load_limits_config()
+        return self._limits_config
+
+    def _load_limits_config(self) -> Optional[LimitsConfig]:
+        """Load limits from YAML file."""
+        limits_file = self._find_limits_file()
+        if not limits_file:
+            return None
+
+        try:
+            with open(limits_file, "r", encoding="utf-8") as f:
+                raw_data = yaml.safe_load(f)
+
+            if not raw_data:
+                return None
+
+            # Parse providers
+            providers = []
+            for provider_data in raw_data.get("providers", []):
+                # Parse model limits if present
+                model_limits = []
+                for ml_data in provider_data.pop("model_limits", []):
+                    model_limits.append(ModelLimit(**ml_data))
+
+                provider_data["model_limits"] = model_limits
+                providers.append(ProviderLimit(**provider_data))
+
+            return LimitsConfig(
+                providers=providers,
+                default_window_hours=raw_data.get("default_window_hours", 5),
+            )
+        except (yaml.YAMLError, ValueError) as e:
+            # Log warning but don't fail - limits are optional
+            import sys
+
+            print(
+                f"Warning: Could not load limits config from {limits_file}: {e}",
+                file=sys.stderr,
+            )
+            return None
+
+    def get_provider_limit(self, provider_id: str) -> Optional[ProviderLimit]:
+        """Get limits for a specific provider."""
+        limits = self.load_limits_config()
+        if limits:
+            return limits.get_provider_limit(provider_id)
+        return None
 
 
 # Global configuration manager instance

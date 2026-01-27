@@ -6,7 +6,7 @@ This guide will help you manually test all functionality of the new OpenCode Mon
 
 ### 1. **Environment Setup**
 ```bash
-cd ocmonitor
+cd omo-monitor
 python3 -m pip install -r requirements.txt
 ```
 
@@ -26,7 +26,7 @@ python3 -m site --user-base
 # export PATH="$(python3 -m site --user-base)/bin:$PATH"
 
 # Verify installation
-ocmonitor --help
+omo-monitor --help
 ```
 **Expected**: Should show main help with all commands listed
 
@@ -40,7 +40,7 @@ python3 test_basic.py
 
 ### Test 1: Configuration Display
 ```bash
-ocmonitor config show
+omo-monitor config show
 ```
 **Expected Output:**
 - 📋 Current Configuration header
@@ -65,14 +65,14 @@ cat config.toml
 ### Test 3: Directory Validation
 ```bash
 # Test with non-existent directory
-ocmonitor sessions /non/existent/path
+omo-monitor sessions /non/existent/path
 ```
 **Expected**: Should show user-friendly error message
 
 ### Test 4: Default Directory Handling
 ```bash
 # Test with default directory (will likely not exist)
-ocmonitor sessions
+omo-monitor sessions
 ```
 **Expected**: Should attempt to use default path and show appropriate message
 
@@ -84,7 +84,7 @@ ocmonitor sessions
 mkdir -p test_sessions
 
 # Test with empty directory
-ocmonitor sessions test_sessions
+omo-monitor sessions test_sessions
 ```
 **Expected**: "No sessions found" message
 
@@ -140,7 +140,7 @@ EOF
 
 ### Test 7: Single Session Analysis
 ```bash
-ocmonitor session test_sessions/ses_test_001
+omo-monitor session test_sessions/ses_test_001
 ```
 **Expected Output:**
 - Beautiful Rich table with session details
@@ -152,7 +152,7 @@ ocmonitor session test_sessions/ses_test_001
 
 ### Test 8: Sessions Summary
 ```bash
-ocmonitor sessions test_sessions
+omo-monitor sessions test_sessions
 ```
 **Expected Output:**
 - Sessions summary table
@@ -165,13 +165,13 @@ ocmonitor sessions test_sessions
 
 ### Test 9: JSON Output
 ```bash
-ocmonitor session test_sessions/ses_test_001 --format json
+omo-monitor session test_sessions/ses_test_001 --format json
 ```
 **Expected**: Valid JSON output with session data
 
 ### Test 10: Table Output (Default)
 ```bash
-ocmonitor sessions test_sessions --format table
+omo-monitor sessions test_sessions --format table
 ```
 **Expected**: Rich formatted table with colors and proper alignment
 
@@ -179,7 +179,7 @@ ocmonitor sessions test_sessions --format table
 
 ### Test 11: CSV Export
 ```bash
-ocmonitor export sessions test_sessions --format csv --output test_export.csv
+omo-monitor export sessions test_sessions --format csv --output test_export.csv
 ```
 **Expected Output:**
 - ✅ Export completed successfully message
@@ -188,7 +188,7 @@ ocmonitor export sessions test_sessions --format csv --output test_export.csv
 
 ### Test 12: JSON Export
 ```bash
-ocmonitor export sessions test_sessions --format json --output test_export.json
+omo-monitor export sessions test_sessions --format json --output test_export.json
 ```
 **Expected Output:**
 - ✅ Export completed successfully message
@@ -237,13 +237,13 @@ EOF
 
 ### Test 15: Daily Breakdown
 ```bash
-ocmonitor daily test_sessions
+omo-monitor daily test_sessions
 ```
 **Expected**: Daily breakdown table with dates and usage
 
 ### Test 16: Model Breakdown
 ```bash
-ocmonitor models test_sessions
+omo-monitor models test_sessions
 ```
 **Expected**:
 - Model usage table
@@ -259,7 +259,7 @@ ocmonitor models test_sessions
 echo "{ invalid json" > test_sessions/ses_test_001/invalid.json
 
 # Test with invalid file
-ocmonitor session test_sessions/ses_test_001
+omo-monitor session test_sessions/ses_test_001
 ```
 **Expected**: Should handle invalid JSON gracefully and continue processing valid files
 
@@ -270,7 +270,7 @@ touch test_sessions/ses_test_001/unreadable.json
 chmod 000 test_sessions/ses_test_001/unreadable.json
 
 # Test handling
-ocmonitor session test_sessions/ses_test_001
+omo-monitor session test_sessions/ses_test_001
 ```
 **Expected**: Should handle permission errors gracefully
 
@@ -283,7 +283,7 @@ cat > test_sessions/ses_test_001/incomplete.json << 'EOF'
 }
 EOF
 
-ocmonitor session test_sessions/ses_test_001
+omo-monitor session test_sessions/ses_test_001
 ```
 **Expected**: Should handle missing fields and show appropriate warnings
 
@@ -292,14 +292,14 @@ ocmonitor session test_sessions/ses_test_001
 ### Test 20: Live Dashboard Setup
 ```bash
 # Test validation
-ocmonitor live test_sessions
+omo-monitor live test_sessions
 ```
 **Expected**: Should show validation warnings and start monitoring
 
 ### Test 21: Live Dashboard Interaction
 1. Start live dashboard in one terminal:
    ```bash
-   ocmonitor live test_sessions --interval 2
+   omo-monitor live test_sessions --interval 2
    ```
 
 2. In another terminal, add a new file:
@@ -329,21 +329,21 @@ ocmonitor live test_sessions
 
 ### Test 22: Date Filtering
 ```bash
-ocmonitor models test_sessions --start-date 2024-01-01 --end-date 2024-12-31
+omo-monitor models test_sessions --start-date 2024-01-01 --end-date 2024-12-31
 ```
 
 ### Test 23: Verbose Mode
 ```bash
-ocmonitor sessions test_sessions --verbose
+omo-monitor sessions test_sessions --verbose
 ```
 **Expected**: More detailed output and error information
 
 ### Test 24: Help Commands
 ```bash
-ocmonitor --help
-ocmonitor session --help
-ocmonitor export --help
-ocmonitor config --help
+omo-monitor --help
+omo-monitor session --help
+omo-monitor export --help
+omo-monitor config --help
 ```
 **Expected**: Comprehensive help for each command
 
@@ -399,8 +399,8 @@ rm -f test_export.*
 
 ## 🐛 Common Issues & Solutions
 
-### Issue: "No module named 'ocmonitor'"
-**Solution**: Run `pip install -e .` from the ocmonitor directory
+### Issue: "No module named 'omo-monitor'"
+**Solution**: Run `pip install -e .` from the omo-monitor directory
 
 ### Issue: "Permission denied"
 **Solution**: Check file permissions and directory access
