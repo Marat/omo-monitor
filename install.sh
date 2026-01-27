@@ -26,36 +26,31 @@ else
     exit 1
 fi
 
+# Create virtual environment if it doesn't exist
+VENV_DIR="venv"
+if [ ! -d "$VENV_DIR" ]; then
+    echo "🔨 Creating virtual environment..."
+    python3 -m venv "$VENV_DIR"
+    echo "✅ Virtual environment created"
+else
+    echo "✅ Virtual environment already exists"
+fi
+
+# Activate virtual environment
+echo "🔌 Activating virtual environment..."
+source "$VENV_DIR/bin/activate"
+
 # Install dependencies
 echo "📥 Installing dependencies..."
-python3 -m pip install -r requirements.txt
+pip install -r requirements.txt
 
 # Install package in development mode
 echo "🔧 Installing omo-monitor in development mode..."
 python3 -m pip install -e .
 
-# Get the scripts directory and add to PATH instructions
-SCRIPTS_DIR=$(python3 -m site --user-base)/bin
-echo "📁 Python scripts will be installed to: $SCRIPTS_DIR"
-
-# Check if scripts directory is in PATH
-if [[ ":$PATH:" != *":$SCRIPTS_DIR:"* ]]; then
-    echo ""
-    echo "⚠️  Warning: $SCRIPTS_DIR is not in your PATH"
-    echo ""
-    echo "📝 To fix this, add the following line to your shell configuration file:"
-    echo ""
-    echo "   For bash (~/.bashrc):"
-    echo "   echo 'export PATH=\"$SCRIPTS_DIR:\$PATH\"' >> ~/.bashrc && source ~/.bashrc"
-    echo ""
-    echo "   For zsh (~/.zshrc):"
-    echo "   echo 'export PATH=\"$SCRIPTS_DIR:\$PATH\"' >> ~/.zshrc && source ~/.zshrc"
-    echo ""
-    echo "   Then restart your terminal or run: source ~/.bashrc (or ~/.zshrc)"
-    echo ""
-else
-    echo "✅ $SCRIPTS_DIR is already in your PATH"
-fi
+# Get the scripts directory
+SCRIPTS_DIR="$(pwd)/$VENV_DIR/bin"
+echo "📁 Python scripts installed to: $SCRIPTS_DIR"
 
 # Test installation
 echo "🧪 Testing installation..."
