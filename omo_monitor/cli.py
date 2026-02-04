@@ -1721,6 +1721,144 @@ def config_set(ctx: click.Context, key: str, value: str):
     click.echo(f"Would set {key} = {value}")
     click.echo("Please edit the config.toml file directly for now.")
 
+# === Pricing management commands ===
+
+
+@cli.group()
+def pricing():
+    """Pricing management commands.
+
+    Manage model pricing from local config and Models.dev API.
+    """
+    pass
+
+
+@pricing.command("status")
+@click.pass_context
+def pricing_status(ctx: click.Context):
+    """Show pricing source status."""
+    from rich.table import Table
+
+    console = ctx.obj["console"]
+    config = ctx.obj["config"]
+
+    try:
+        from .pricing import get_pricing_provider
+
+        provider = get_pricing_provider()
+        provider.set_local_pricing(ctx.obj["pricing_data"])
+        status = provider.get_status()
+
+        console.print("[bold cyan]Pricing Status[/bold cyan]")
+        console.print()
+        console.print(f"[dim]Source:[/dim] {status['source']}")
+        console.print(f"[dim]Fallback to local:[/dim] {status['fallback_to_local']}")
+        console.print(f"[dim]Local models:[/dim] {status['local_models_count']}")
+
+        if status.get("models_dev"):
+            md = status["models_dev"]
+            console.print()
+            console.print("[bold]Models.dev:[/bold]")
+            console.print(f"  API URL: {md['api_url']}")
+            console.print(f"  Cache TTL: {md['cache_ttl_hours']}h")
+            console.print(f"  File cache: {'exists' if md['file_cache_exists'] else 'not found'}")
+
+            if md.get("file_cache_age"):
+                age_hours = md["file_cache_age"] / 3600
+                console.print(f"  Cache age: {age_hours:.1f}h")
+
+            console.print(f"  Models cached: {md['models_count']}")
+
+    except Exception as e:
+        error_msg = create_user_friendly_error(e)
+        click.echo(f"Error getting pricing status: {error_msg}", err=True)
+
+
+@pricing.command("update")
+@click.pass_context
+def pricing_update(ctx: click.Context):
+    """Refresh pricing from Models.dev API."""
+    console = ctx.obj["console"]
+
+    try:
+        from .pricing import get_pricing_provider
+
+        provider = get_pricing_provider()
+
+        console.print("Fetching pricing from Models.dev...")
+
+        if provider.refresh_models_dev():
+            status = provider.get_status()
+            models_count = status.get("models_dev", {}).get("models_count", 0)
+            console.print(f"[green]Success![/green] {models_count} models updated.")
+        else:
+            console.print("[yellow]Warning:[/yellow] Could not fetch from Models.dev")
+            console.print("[dim]Ensure 'requests' package is installed and network is available.[/dim]")
+
+    except Exception as e:
+        error_msg = create_user_friendly_error(e)
+        click.echo(f"Error updating pricing: {error_msg}", err=True)
+
+
+@pricing.command("list")
+@click.option("--source", "-s", type=click.Choice(["local", "models.dev", "all"]), default="all")
+@click.pass_context
+def pricing_list(ctx: click.Context, source: str):
+    """List available model pricing."""
+    from rich.table import Table
+
+    console = ctx.obj["console"]
+
+    try:
+        from .pricing import get_pricing_provider
+
+        provider = get_pricing_provider()
+        provider.set_local_pricing(ctx.obj["pricing_data"])
+
+        # Get pricing based on source filter
+        if source == "local":
+            pricing = {
+                k: provider._convert_local_pricing(v)
+                for k, v in (provider._local_pricing or {}).items()
+            }
+        elif source == "models.dev":
+            client = provider.get_models_dev_client()
+            pricing = client.fetch_pricing()
+        else:
+            pricing = provider.get_all_pricing()
+
+        if not pricing:
+            console.print("[dim]No pricing data available.[/dim]")
+            return
+
+        table = Table(show_header=True, header_style="bold blue")
+        table.add_column("Model", style="cyan")
+        table.add_column("Input", justify="right")
+        table.add_column("Output", justify="right")
+        table.add_column("Cache R", justify="right")
+        table.add_column("Cache W", justify="right")
+        table.add_column("Context", justify="right")
+
+        for model_id in sorted(pricing.keys())[:50]:  # Limit to 50
+            p = pricing[model_id]
+            table.add_row(
+                model_id[:40],
+                f"${p.input:.2f}",
+                f"${p.output:.2f}",
+                f"${p.cache_read:.2f}",
+                f"${p.cache_write:.2f}",
+                f"{p.context_window:,}",
+            )
+
+        console.print(table)
+
+        if len(pricing) > 50:
+            console.print(f"[dim]...and {len(pricing) - 50} more models[/dim]")
+
+    except Exception as e:
+        error_msg = create_user_friendly_error(e)
+        click.echo(f"Error listing pricing: {error_msg}", err=True)
+
 
 def main():
     """Entry point for the CLI application."""

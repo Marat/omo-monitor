@@ -33,6 +33,7 @@ setup(
         "rich>=13.0.0",
         "pydantic>=2.0.0",
         "toml>=0.10.0",
+        "requests>=2.28.0",
     ],
     extras_require={
         "dev": [

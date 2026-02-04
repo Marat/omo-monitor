@@ -87,6 +87,29 @@ class AnalyticsConfig(BaseModel):
         description="Default data source: opencode, claude-code, codex, crush, all, or auto-detect",
     )
 
+class PricingConfig(BaseModel):
+    """Configuration for model pricing."""
+
+    source: str = Field(
+        default="local",
+        pattern="^(local|models\\.dev|both)$",
+        description="Pricing source: local (models.json), models.dev (API), or both",
+    )
+    fallback_to_local: bool = Field(
+        default=True,
+        description="Fall back to local pricing if Models.dev fails",
+    )
+    cache_ttl_hours: int = Field(
+        default=24,
+        ge=1,
+        le=168,
+        description="Hours to cache Models.dev pricing data",
+    )
+    api_url: str = Field(
+        default="https://models.dev/api.json",
+        description="Models.dev API URL",
+    )
+
 
 class Config(BaseModel):
     """Main configuration class."""
@@ -96,6 +119,7 @@ class Config(BaseModel):
     export: ExportConfig = Field(default_factory=ExportConfig)
     models: ModelsConfig = Field(default_factory=ModelsConfig)
     analytics: AnalyticsConfig = Field(default_factory=AnalyticsConfig)
+    pricing: PricingConfig = Field(default_factory=PricingConfig)
 
 
 class ModelPricing(BaseModel):
