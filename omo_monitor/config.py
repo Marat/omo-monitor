@@ -87,6 +87,42 @@ class AnalyticsConfig(BaseModel):
         description="Default data source: opencode, claude-code, codex, crush, all, or auto-detect",
     )
 
+
+class CacheConfig(BaseModel):
+    """Configuration for DuckDB cache."""
+
+    enabled: bool = Field(
+        default=True,
+        description="Enable persistent DuckDB cache for fast session loading",
+    )
+    db_path: str = Field(
+        default="~/.cache/omo-monitor/cache.duckdb",
+        description="Path to DuckDB cache database file",
+    )
+    fresh_threshold_minutes: int = Field(
+        default=30,
+        ge=1,
+        le=1440,
+        description="Consider data fresh if within this many minutes",
+    )
+    batch_size: int = Field(
+        default=100,
+        ge=10,
+        le=1000,
+        description="Number of records to commit per batch",
+    )
+    background_sync: bool = Field(
+        default=True,
+        description="Enable background syncing of historical data",
+    )
+
+    @field_validator("db_path")
+    @classmethod
+    def expand_db_path(cls, v):
+        """Expand user paths and environment variables."""
+        return os.path.expanduser(os.path.expandvars(v))
+
+
 class PricingConfig(BaseModel):
     """Configuration for model pricing."""
 
@@ -119,6 +155,7 @@ class Config(BaseModel):
     export: ExportConfig = Field(default_factory=ExportConfig)
     models: ModelsConfig = Field(default_factory=ModelsConfig)
     analytics: AnalyticsConfig = Field(default_factory=AnalyticsConfig)
+    cache: CacheConfig = Field(default_factory=CacheConfig)
     pricing: PricingConfig = Field(default_factory=PricingConfig)
 
 

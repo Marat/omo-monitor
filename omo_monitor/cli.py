@@ -1721,6 +1721,243 @@ def config_set(ctx: click.Context, key: str, value: str):
     click.echo(f"Would set {key} = {value}")
     click.echo("Please edit the config.toml file directly for now.")
 
+
+# === Cache management commands ===
+
+
+@cli.group()
+def cache():
+    """Cache management commands.
+
+    Manage the DuckDB cache for fast session loading.
+    """
+    pass
+
+
+@cache.command("status")
+@click.pass_context
+def cache_status(ctx: click.Context):
+    """Show cache status and statistics."""
+    from rich.table import Table
+
+    console = ctx.obj["console"]
+    config = ctx.obj["config"]
+
+    try:
+        from .cache import CacheManager
+
+        cache_path = config.cache.db_path
+        cache_mgr = CacheManager(db_path=cache_path)
+
+        stats = cache_mgr.get_stats()
+
+        console.print("[bold cyan]Cache Status[/bold cyan]")
+        console.print()
+
+        # Basic info
+        console.print(f"[dim]Database:[/dim] {stats['db_path']}")
+        console.print(f"[dim]Enabled:[/dim] {config.cache.enabled}")
+
+        if stats["db_size_bytes"] > 0:
+            size_mb = stats["db_size_bytes"] / (1024 * 1024)
+            console.print(f"[dim]Size:[/dim] {size_mb:.2f} MB")
+        else:
+            console.print("[dim]Size:[/dim] Empty (not initialized)")
+
+        console.print()
+
+        # Stats table
+        table = Table(show_header=True, header_style="bold blue")
+        table.add_column("Metric", style="cyan")
+        table.add_column("Value", justify="right")
+
+        table.add_row("Sessions", f"{stats['sessions']:,}")
+        table.add_row("Interactions", f"{stats['interactions']:,}")
+        table.add_row("Source files tracked", f"{stats['source_files']:,}")
+
+        console.print(table)
+
+        # Source breakdown
+        if stats.get("sources"):
+            console.print()
+            console.print("[bold]Sessions by source:[/bold]")
+            for source, count in stats["sources"].items():
+                console.print(f"  {source}: {count:,}")
+
+        # Time range
+        if stats.get("time_range") and stats["time_range"]["start"]:
+            console.print()
+            console.print(f"[dim]Time range:[/dim] {stats['time_range']['start']} to {stats['time_range']['end']}")
+
+        cache_mgr.close()
+
+    except Exception as e:
+        error_msg = create_user_friendly_error(e)
+        click.echo(f"Error getting cache status: {error_msg}", err=True)
+        if ctx.obj["verbose"]:
+            click.echo(f"Details: {str(e)}", err=True)
+
+
+@cache.command("clear")
+@click.option("--yes", "-y", is_flag=True, help="Skip confirmation prompt")
+@click.pass_context
+def cache_clear(ctx: click.Context, yes: bool):
+    """Clear all cached data."""
+    config = ctx.obj["config"]
+
+    if not yes:
+        if not click.confirm("This will delete all cached data. Continue?"):
+            click.echo("Cancelled.")
+            return
+
+    try:
+        from .cache import CacheManager
+
+        cache_path = config.cache.db_path
+        cache_mgr = CacheManager(db_path=cache_path)
+        cache_mgr.clear()
+        cache_mgr.close()
+
+        click.echo("Cache cleared successfully.")
+
+    except Exception as e:
+        error_msg = create_user_friendly_error(e)
+        click.echo(f"Error clearing cache: {error_msg}", err=True)
+
+
+@cache.command("rebuild")
+@click.option(
+    "--hours",
+    "-H",
+    type=int,
+    default=24,
+    help="Hours of history to rebuild (default: 24)",
+)
+@click.option(
+    "--source",
+    "-s",
+    type=click.Choice(["opencode", "claude-code", "codex", "crush", "all", "auto"]),
+    default=None,
+    help="Data source to rebuild",
+)
+@click.pass_context
+def cache_rebuild(ctx: click.Context, hours: int, source: Optional[str]):
+    """Rebuild cache from source data.
+
+    Clears existing cache and reloads data for the specified time range.
+    """
+    from rich.progress import Progress, SpinnerColumn, TextColumn
+
+    config = ctx.obj["config"]
+    console = ctx.obj["console"]
+
+    try:
+        from .cache import CacheManager
+        from .cache.loader import SmartLoader
+
+        # Use provided source or context source
+        if source:
+            data_source = get_data_source(source)
+        else:
+            data_source = ctx.obj["data_source"]
+
+        cache_path = config.cache.db_path
+        cache_mgr = CacheManager(db_path=cache_path)
+
+        # Clear existing cache
+        cache_mgr.clear()
+        console.print("[yellow]Cache cleared.[/yellow]")
+
+        # Create loader
+        loader = SmartLoader(
+            cache_mgr,
+            batch_size=config.cache.batch_size,
+            fresh_threshold_minutes=config.cache.fresh_threshold_minutes,
+        )
+
+        # Progress callback
+        last_file = [""]
+
+        def progress_cb(file_path: str, current: int, total: int):
+            last_file[0] = Path(file_path).name
+
+        # Rebuild
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            task = progress.add_task(f"Loading {hours}h of data...", total=None)
+
+            result = loader.load_with_strategy(
+                data_source,
+                requested_hours=float(hours),
+                progress_callback=progress_cb,
+            )
+
+            progress.update(task, completed=True)
+
+        # Show results
+        console.print()
+        console.print(f"[green]Rebuild complete![/green]")
+        console.print(f"  Sessions loaded: {result['immediate_loaded']}")
+
+        if result.get("background_scheduled"):
+            console.print(f"  [dim]Background loading scheduled for {len(result.get('gaps_found', []))} gap(s)[/dim]")
+
+        # Show final stats
+        stats = cache_mgr.get_stats()
+        console.print(f"  Total sessions in cache: {stats['sessions']:,}")
+        console.print(f"  Total interactions: {stats['interactions']:,}")
+
+        loader.stop_background()
+        cache_mgr.close()
+
+    except Exception as e:
+        error_msg = create_user_friendly_error(e)
+        click.echo(f"Error rebuilding cache: {error_msg}", err=True)
+        if ctx.obj["verbose"]:
+            click.echo(f"Details: {str(e)}", err=True)
+
+
+@cache.command("sync")
+@click.pass_context
+def cache_sync(ctx: click.Context):
+    """Sync cache with source data (incremental update)."""
+    from rich.progress import Progress, SpinnerColumn, TextColumn
+
+    config = ctx.obj["config"]
+    console = ctx.obj["console"]
+
+    try:
+        from .cache import CacheManager
+        from .cache.loader import IncrementalLoader
+
+        data_source = ctx.obj["data_source"]
+        cache_path = config.cache.db_path
+        cache_mgr = CacheManager(db_path=cache_path)
+        loader = IncrementalLoader(cache_mgr, batch_size=config.cache.batch_size)
+
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            task = progress.add_task("Syncing...", total=None)
+
+            loaded = loader.load_source(data_source)
+
+            progress.update(task, completed=True)
+
+        console.print(f"[green]Sync complete![/green] {loaded} session(s) updated.")
+
+        cache_mgr.close()
+
+    except Exception as e:
+        error_msg = create_user_friendly_error(e)
+        click.echo(f"Error syncing cache: {error_msg}", err=True)
+
+
 # === Pricing management commands ===
 
 
