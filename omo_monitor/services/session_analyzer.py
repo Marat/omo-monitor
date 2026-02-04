@@ -1,8 +1,8 @@
-"""Session analysis service for OpenCode Monitor."""
+"""Session analysis service for OmO Monitor."""
 
 import time
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, TYPE_CHECKING
 from datetime import datetime, date
 from decimal import Decimal
 
@@ -25,43 +25,64 @@ from ..utils.file_utils import FileProcessor
 from ..utils.time_utils import TimeUtils
 from ..config import ModelPricing
 
+if TYPE_CHECKING:
+    from ..utils.data_source import DataSource
+
 
 class SessionAnalyzer:
-    """Service for analyzing OpenCode sessions."""
+    """Service for analyzing AI coding sessions."""
 
-    def __init__(self, pricing_data: Dict[str, ModelPricing]):
+    def __init__(
+        self,
+        pricing_data: Dict[str, ModelPricing],
+        data_source: Optional["DataSource"] = None,
+    ):
         """Initialize session analyzer.
 
         Args:
             pricing_data: Model pricing information
+            data_source: Optional data source for loading sessions.
+                         If None, uses FileProcessor directly (OpenCode only).
         """
         self.pricing_data = pricing_data
+        self._data_source = data_source
 
     def analyze_single_session(self, session_path: str) -> Optional[SessionData]:
-        """Analyze a single session directory.
+        """Analyze a single session.
 
         Args:
-            session_path: Path to session directory
+            session_path: Path to session (directory or file)
 
         Returns:
             SessionData object or None if analysis failed
         """
         path = Path(session_path)
+
+        if self._data_source:
+            return self._data_source.load_session(path)
+
+        # Fallback to FileProcessor for backward compatibility
         return FileProcessor.load_session_data(path)
 
     def analyze_all_sessions(
-        self, base_path: str, limit: Optional[int] = None
+        self, base_path: Optional[str] = None, limit: Optional[int] = None
     ) -> List[SessionData]:
-        """Analyze all sessions in a directory.
+        """Analyze all sessions from configured data source.
 
         Args:
-            base_path: Path to directory containing sessions
+            base_path: Path to directory containing sessions (optional)
             limit: Maximum number of sessions to analyze
 
         Returns:
             List of SessionData objects
         """
-        return FileProcessor.load_all_sessions(base_path, limit)
+        if self._data_source:
+            return self._data_source.load_all_sessions(base_path, limit)
+
+        # Fallback to FileProcessor for backward compatibility
+        if base_path:
+            return FileProcessor.load_all_sessions(base_path, limit)
+        return []
 
     def get_sessions_summary(self, sessions: List[SessionData]) -> Dict[str, Any]:
         """Generate summary statistics for multiple sessions.

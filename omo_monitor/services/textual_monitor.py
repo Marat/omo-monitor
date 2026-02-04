@@ -19,10 +19,15 @@ from textual.timer import Timer
 
 import watchfiles
 
-from ..models.session import TokenUsage
+from ..models.session import TokenUsage, SessionData
 from ..models.limits import LimitsConfig
 from ..utils.file_utils import FileProcessor
 from ..config import ModelPricing
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..utils.data_source import DataSource
 
 
 class StatsPanel(Static):
@@ -153,6 +158,7 @@ class AggregateMonitorApp(App):
         limits_config: Optional[LimitsConfig] = None,
         refresh_interval: int = 10,
         hours_filter: Optional[float] = None,
+        data_source: Optional["DataSource"] = None,
     ):
         super().__init__()
         self.base_path = base_path
@@ -160,6 +166,7 @@ class AggregateMonitorApp(App):
         self.limits_config = limits_config
         self.refresh_interval = refresh_interval
         self.hours_filter = hours_filter  # None = today only, 0 = fresh start
+        self._data_source = data_source
         self._update_timer: Optional[Timer] = None
         self._loading = False
 
@@ -188,6 +195,18 @@ class AggregateMonitorApp(App):
         # Error tracking
         self._error_count: int = 0
         self._last_error_count: int = 0
+
+    def _find_sessions(self, base_path: str) -> List[Path]:
+        """Find session paths using data source or FileProcessor."""
+        if self._data_source:
+            return self._data_source.find_sessions(base_path)
+        return self._find_sessions(base_path)
+
+    def _load_session(self, session_path: Path) -> Optional[SessionData]:
+        """Load a session using data source or FileProcessor."""
+        if self._data_source:
+            return self._data_source.load_session(session_path)
+        return self._load_session(session_path)
 
     def compose(self) -> ComposeResult:
         """Create child widgets."""
@@ -231,23 +250,51 @@ class AggregateMonitorApp(App):
             self._watcher_thread.join(timeout=1)
 
     def _start_watcher(self) -> None:
-        """Start file system watcher in background."""
-        base_path = Path(self.base_path).expanduser()
+        """Start file system watcher in background.
+
+        For MergedDataSource, watches multiple paths from all sub-sources.
+        """
+        # Collect all paths to watch
+        watch_paths: List[Path] = []
+
+        if self._data_source:
+            # Check if it's a MergedDataSource with multiple sources
+            from ..utils.data_source import MergedDataSource
+
+            if isinstance(self._data_source, MergedDataSource):
+                for source in self._data_source.sources:
+                    if source.default_path:
+                        p = Path(source.default_path).expanduser()
+                        if p.exists():
+                            watch_paths.append(p)
+            elif self._data_source.default_path:
+                p = Path(self._data_source.default_path).expanduser()
+                if p.exists():
+                    watch_paths.append(p)
+
+        # Fallback to base_path if no paths from data_source
+        if not watch_paths:
+            base_path = Path(self.base_path).expanduser()
+            if base_path.exists():
+                watch_paths.append(base_path)
+
+        if not watch_paths:
+            return  # Nothing to watch
 
         def watch_loop():
             try:
                 for changes in watchfiles.watch(
-                    base_path,
+                    *watch_paths,
                     stop_event=self._stop_watcher,
                     recursive=True,
                 ):
                     for change_type, path in changes:
-                        # Extract session ID from path (e.g., .../ses_xxx/file.json)
+                        # Mark parent directory as changed session
+                        # Works for both OpenCode (ses_xxx) and Claude Code (projects/xxx/sessions)
                         path_obj = Path(path)
-                        for parent in path_obj.parents:
-                            if parent.name.startswith("ses_"):
-                                self._changed_sessions.add(str(parent))
-                                break
+                        # Use immediate parent directory as session identifier
+                        if path_obj.parent.exists():
+                            self._changed_sessions.add(str(path_obj.parent))
             except Exception:
                 pass  # Watcher stopped
 
@@ -331,35 +378,33 @@ class AggregateMonitorApp(App):
     def _find_new_sessions(self) -> List[Path]:
         """Find sessions that exist but aren't in cache (new sessions).
 
-        Uses directory mtime for quick check - only loads session if dir is recent.
+        Uses data_source.find_sessions() for proper multi-source support.
         """
-        base_path = Path(self.base_path).expanduser()
-        if not base_path.exists():
-            return []
-
         cutoff = self._get_cutoff_time()
         cutoff_ts = cutoff.timestamp()
         cached_ids = set(self._session_cache.keys())
         new_sessions = []
 
-        # Quick scan using directory mtime (no file loading)
+        # Use data_source to find all sessions (supports multiple sources)
         try:
-            for entry in base_path.iterdir():
-                if not entry.is_dir() or not entry.name.startswith("ses_"):
-                    continue
+            all_session_paths = self._find_sessions(self.base_path)
 
+            for entry in all_session_paths:
                 session_id = str(entry)
                 if session_id in cached_ids:
                     continue
 
-                # Check dir mtime - if modified after cutoff, it might have new data
-                if entry.stat().st_mtime >= cutoff_ts:
-                    new_sessions.append(entry)
+                # Check mtime - if modified after cutoff, it might have new data
+                try:
+                    if entry.stat().st_mtime >= cutoff_ts:
+                        new_sessions.append(entry)
+                except OSError:
+                    continue
 
                 # Limit how many new sessions we check
-                if len(new_sessions) >= 10:
+                if len(new_sessions) >= 20:
                     break
-        except OSError:
+        except Exception:
             pass
 
         return new_sessions
@@ -370,8 +415,22 @@ class AggregateMonitorApp(App):
 
     def _get_sessions_for_full_load(self) -> List[Path]:
         """Get list of sessions for full load with optimization."""
-        session_dirs = FileProcessor.find_session_directories(self.base_path)
+        session_dirs = self._find_sessions(self.base_path)
         cutoff = self._get_cutoff_time()
+
+        # Sort sessions by modification time (newest first) to ensure
+        # recent sessions from all sources are processed first
+        # This is critical for MergedDataSource where sessions from
+        # different sources may be interleaved
+        cutoff_ts = cutoff.timestamp()
+        try:
+            session_dirs = sorted(
+                session_dirs,
+                key=lambda p: p.stat().st_mtime,
+                reverse=True,
+            )
+        except OSError:
+            pass  # Keep original order if stat fails
 
         # Scan limits (generous for large time ranges)
         max_sessions = 2000
@@ -382,7 +441,7 @@ class AggregateMonitorApp(App):
 
         for session_dir in session_dirs[:max_sessions]:
             try:
-                session = FileProcessor.load_session_data(session_dir)
+                session = self._load_session(session_dir)
                 if not session or not session.files:
                     consecutive_misses += 1
                     if consecutive_misses >= max_consecutive_misses:
@@ -416,7 +475,7 @@ class AggregateMonitorApp(App):
     ) -> Optional[Dict[str, Any]]:
         """Load data for a single session."""
         try:
-            session = FileProcessor.load_session_data(session_dir)
+            session = self._load_session(session_dir)
             if not session or not session.files:
                 return None
 
@@ -1103,6 +1162,7 @@ def run_textual_monitor(
     limits_config: Optional[LimitsConfig] = None,
     refresh_interval: int = 10,
     hours_filter: Optional[float] = None,
+    data_source: Optional["DataSource"] = None,
 ) -> None:
     """Run the Textual-based aggregate monitor.
 
@@ -1112,6 +1172,7 @@ def run_textual_monitor(
         limits_config: Provider limits configuration
         refresh_interval: UI refresh interval in seconds
         hours_filter: Show data from last N hours (None = today only, supports float for minutes)
+        data_source: Data source for loading sessions (optional)
     """
     app = AggregateMonitorApp(
         base_path=base_path,
@@ -1119,5 +1180,6 @@ def run_textual_monitor(
         limits_config=limits_config,
         refresh_interval=refresh_interval,
         hours_filter=hours_filter,
+        data_source=data_source,
     )
     app.run()

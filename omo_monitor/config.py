@@ -20,14 +20,22 @@ def opencode_storage_path(path: str | None = None) -> str:
     return os.path.join(*parts)
 
 
+def claude_code_storage_path() -> str:
+    """Get default Claude Code storage path."""
+    return os.path.join("~", ".claude", "projects")
+
+
 class PathsConfig(BaseModel):
     """Configuration for file paths."""
 
     messages_dir: str = Field(default=opencode_storage_path("message"))
     opencode_storage_dir: str = Field(default=opencode_storage_path())
+    claude_code_storage_dir: str = Field(default=claude_code_storage_path())
     export_dir: str = Field(default="./exports")
 
-    @field_validator("messages_dir", "opencode_storage_dir", "export_dir")
+    @field_validator(
+        "messages_dir", "opencode_storage_dir", "claude_code_storage_dir", "export_dir"
+    )
     @classmethod
     def expand_path(cls, v):
         """Expand user paths and environment variables."""
@@ -68,6 +76,16 @@ class AnalyticsConfig(BaseModel):
 
     default_timeframe: str = Field(default="daily", pattern="^(daily|weekly|monthly)$")
     recent_sessions_limit: int = Field(default=50, ge=1, le=1000)
+    fallback_provider_ids: list[str] = Field(
+        default=["fallback"],
+        description="Provider IDs that act as fallback proxies. "
+        "When detected, real provider/model is extracted from part metadata.",
+    )
+    default_source: str = Field(
+        default="auto",
+        pattern="^(opencode|claude-code|codex|crush|all|auto)$",
+        description="Default data source: opencode, claude-code, codex, crush, all, or auto-detect",
+    )
 
 
 class Config(BaseModel):

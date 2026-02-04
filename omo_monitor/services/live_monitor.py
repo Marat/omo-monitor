@@ -87,9 +87,14 @@ from ..utils.file_utils import FileProcessor
 from ..ui.dashboard import DashboardUI
 from ..config import ModelPricing
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..utils.data_source import DataSource
+
 
 class LiveMonitor:
-    """Service for live monitoring of OpenCode sessions."""
+    """Service for live monitoring of AI coding sessions."""
 
     def __init__(
         self,
@@ -97,6 +102,7 @@ class LiveMonitor:
         console: Optional[Console] = None,
         session_max_hours: float = 5.0,
         limits_config: Optional[LimitsConfig] = None,
+        data_source: Optional["DataSource"] = None,
     ):
         """Initialize live monitor.
 
@@ -105,12 +111,14 @@ class LiveMonitor:
             console: Rich console for output
             session_max_hours: Maximum session duration for progress bar (hours)
             limits_config: Subscription limits configuration
+            data_source: Data source for loading sessions (optional, defaults to OpenCode)
         """
         self.pricing_data = pricing_data
         self.console = console or Console()
         self.dashboard_ui = DashboardUI(console)
         self.session_max_hours = session_max_hours
         self.limits_config = limits_config
+        self._data_source = data_source
 
         # Cache for daily cost calculation (expensive, update every N ticks)
         self._daily_cost_cache: Optional[Decimal] = None
@@ -134,6 +142,35 @@ class LiveMonitor:
         self._selected_provider_filter: Optional[str] = None  # Filter by provider
         self._show_help = False  # Toggle help overlay
         self._available_providers: List[str] = []  # For filter cycling
+
+    def _find_sessions(self, base_path: str) -> List[Path]:
+        """Find session paths using data source or FileProcessor."""
+        if self._data_source:
+            return self._data_source.find_sessions(base_path)
+        return self._find_sessions(base_path)
+
+    def _load_session(self, session_path: Path) -> Optional[SessionData]:
+        """Load a session using data source or FileProcessor."""
+        if self._data_source:
+            return self._data_source.load_session(session_path)
+        return self._load_session(session_path)
+
+    def _load_all_sessions(
+        self, base_path: Optional[str] = None, limit: Optional[int] = None
+    ) -> List[SessionData]:
+        """Load all sessions using data source or FileProcessor."""
+        if self._data_source:
+            return self._data_source.load_all_sessions(base_path, limit)
+        if base_path:
+            return FileProcessor.load_all_sessions(base_path, limit)
+        return []
+
+    def _get_most_recent_session(self, base_path: str) -> Optional[SessionData]:
+        """Get most recent session using data source or FileProcessor."""
+        if self._data_source:
+            sessions = self._data_source.load_all_sessions(base_path, limit=1)
+            return sessions[0] if sessions else None
+        return self._get_most_recent_session(base_path)
 
     def _handle_keypress(self) -> bool:
         """Handle keyboard input. Returns True if should continue, False to quit."""
@@ -314,7 +351,7 @@ class LiveMonitor:
                                 recent_session = most_recent
                             else:
                                 # Same session, just reload its data
-                                updated_session = FileProcessor.load_session_data(
+                                updated_session = self._load_session(
                                     recent_session.session_path
                                 )
                                 if updated_session:
@@ -386,7 +423,7 @@ class LiveMonitor:
         """
         today = datetime.now().date()
         now = datetime.now()
-        session_dirs = FileProcessor.find_session_directories(base_path)
+        session_dirs = self._find_sessions(base_path)
 
         # Aggregate stats by project AND by provider
         project_stats: Dict[str, Dict[str, Any]] = defaultdict(
@@ -431,7 +468,7 @@ class LiveMonitor:
         recent_files: List[tuple] = []
 
         for session_dir in session_dirs:
-            session = FileProcessor.load_session_data(session_dir)
+            session = self._load_session(session_dir)
             if not session or not session.files:
                 continue
 
@@ -889,7 +926,7 @@ class LiveMonitor:
 
         if needs_dir_scan:
             self._last_dir_scan_tick = self._tick_count
-            session_dirs = FileProcessor.find_session_directories(base_path)
+            session_dirs = self._find_sessions(base_path)
         else:
             # Use cached session paths
             session_dirs = [Path(p) for p in self._session_cache.keys()]
@@ -975,7 +1012,7 @@ class LiveMonitor:
                     return cached_session
 
             # Reload session
-            session = FileProcessor.load_session_data(path_obj)
+            session = self._load_session(path_obj)
             if session:
                 self._session_cache[session_path] = session
                 self._session_mtime[session_path] = current_mtime
@@ -1079,11 +1116,11 @@ class LiveMonitor:
             return None
 
         today = datetime.now().date()
-        session_dirs = FileProcessor.find_session_directories(self._current_base_path)
+        session_dirs = self._find_sessions(self._current_base_path)
         total_cost = Decimal("0.0")
 
         for session_dir in session_dirs:
-            session = FileProcessor.load_session_data(session_dir)
+            session = self._load_session(session_dir)
             if not session or not session.files:
                 continue
 
@@ -1103,7 +1140,7 @@ class LiveMonitor:
         Returns:
             Dictionary with session status information
         """
-        recent_session = FileProcessor.get_most_recent_session(base_path)
+        recent_session = self._get_most_recent_session(base_path)
         if not recent_session:
             return {"status": "no_sessions", "message": "No sessions found"}
 
@@ -1156,7 +1193,7 @@ class LiveMonitor:
         Returns:
             Monitoring data or None if no session found
         """
-        recent_session = FileProcessor.get_most_recent_session(base_path)
+        recent_session = self._get_most_recent_session(base_path)
         if not recent_session:
             return None
 
@@ -1251,12 +1288,12 @@ class LiveMonitor:
             return {"valid": False, "issues": issues, "warnings": warnings}
 
         # Check for session directories
-        session_dirs = FileProcessor.find_session_directories(base_path)
+        session_dirs = self._find_sessions(base_path)
         if not session_dirs:
             warnings.append("No session directories found")
         else:
             # Check most recent session
-            recent_session = FileProcessor.load_session_data(session_dirs[0])
+            recent_session = self._load_session(session_dirs[0])
             if not recent_session:
                 warnings.append("Most recent session directory contains no valid data")
             elif not recent_session.files:

@@ -217,6 +217,51 @@ class FileProcessor:
         return None
 
     @staticmethod
+    def extract_fallback_metadata(message_id: str) -> Optional[Dict[str, str]]:
+        """Extract fallback provider metadata from message parts.
+
+        omo-multi-account plugin injects real provider/model info into part metadata
+        when using fallback providers. This extracts that info so statistics show
+        the actual provider used, not "fallback".
+
+        Args:
+            message_id: Message ID to look up parts for
+
+        Returns:
+            Dict with 'providerID' and 'modelID' if found, None otherwise
+        """
+        storage_path = FileProcessor.get_opencode_storage_path()
+        if not storage_path:
+            return None
+
+        part_dir = storage_path / "part" / message_id
+        if not part_dir.exists() or not part_dir.is_dir():
+            return None
+
+        # Look for any part with metadata.fallback
+        for part_file in part_dir.glob("*.json"):
+            data = FileProcessor.load_json_file(part_file)
+            if not data:
+                continue
+
+            metadata = data.get("metadata")
+            if not metadata:
+                continue
+
+            fallback = metadata.get("fallback")
+            if fallback and isinstance(fallback, dict):
+                provider_id = fallback.get("providerID")
+                model_id = fallback.get("modelID")
+                if provider_id and model_id:
+                    return {
+                        "providerID": provider_id,
+                        "modelID": model_id,
+                        "target": fallback.get("target", ""),
+                    }
+
+        return None
+
+    @staticmethod
     def find_session_title(session_id: str) -> Optional[str]:
         """Find and load session title from OpenCode storage.
 
@@ -287,6 +332,18 @@ class FileProcessor:
             model_id = "unknown"
             if model_id_raw:
                 model_id = FileProcessor._extract_model_name(model_id_raw)
+
+            # === Fallback provider resolution ===
+            # If provider is a fallback proxy, extract real provider/model from parts
+            from ..config import config_manager
+
+            fallback_providers = config_manager.config.analytics.fallback_provider_ids
+            if provider_id in fallback_providers and message_id:
+                fallback_meta = FileProcessor.extract_fallback_metadata(message_id)
+                if fallback_meta:
+                    provider_id = fallback_meta["providerID"]
+                    model_id_raw = fallback_meta["modelID"]
+                    model_id = FileProcessor._extract_model_name(model_id_raw)
 
             # === Token usage ===
             tokens_data = data.get("tokens", {})

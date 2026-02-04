@@ -27,6 +27,7 @@ from .utils.error_handling import (
     handle_errors,
     create_user_friendly_error,
 )
+from .utils.data_source import get_data_source, get_default_source
 from . import __version__
 
 
@@ -48,12 +49,19 @@ def json_serializer(obj):
     "--config", "-c", type=click.Path(exists=True), help="Path to configuration file"
 )
 @click.option("--verbose", "-v", is_flag=True, help="Enable verbose output")
+@click.option(
+    "--source",
+    "-s",
+    type=click.Choice(["opencode", "claude-code", "codex", "crush", "all", "auto"]),
+    default=None,
+    help="Data source: opencode, claude-code, codex, crush, all (merged), or auto-detect",
+)
 @click.pass_context
-def cli(ctx: click.Context, config: Optional[str], verbose: bool):
-    """OpenCode Monitor - Analytics and monitoring for OpenCode sessions.
+def cli(ctx: click.Context, config: Optional[str], verbose: bool, source: Optional[str]):
+    """OmO Monitor - Analytics and monitoring for AI coding sessions.
 
     Monitor token usage, costs, and performance metrics from your OpenCode
-    AI coding sessions with beautiful tables and real-time dashboards.
+    and Claude Code AI coding sessions with beautiful tables and real-time dashboards.
     """
     # Initialize context object
     ctx.ensure_object(dict)
@@ -70,8 +78,18 @@ def cli(ctx: click.Context, config: Optional[str], verbose: bool):
         ctx.obj["config"] = config_manager.config
         ctx.obj["pricing_data"] = config_manager.load_pricing_data()
 
+        # Initialize data source
+        if source:
+            ctx.obj["data_source"] = get_data_source(source)
+        else:
+            ctx.obj["data_source"] = get_default_source()
+        ctx.obj["source_name"] = ctx.obj["data_source"].name
+
         # Initialize services
-        analyzer = SessionAnalyzer(ctx.obj["pricing_data"])
+        analyzer = SessionAnalyzer(
+            ctx.obj["pricing_data"],
+            data_source=ctx.obj["data_source"],
+        )
         ctx.obj["analyzer"] = analyzer
         ctx.obj["report_generator"] = ReportGenerator(analyzer, ctx.obj["console"])
         ctx.obj["export_service"] = ExportService(ctx.obj["config"].paths.export_dir)
@@ -81,11 +99,12 @@ def cli(ctx: click.Context, config: Optional[str], verbose: bool):
             ctx.obj["console"],
             session_max_hours=ctx.obj["config"].ui.session_max_hours,
             limits_config=ctx.obj["limits_config"],
+            data_source=ctx.obj["data_source"],
         )
 
     except Exception as e:
         error_msg = create_user_friendly_error(e)
-        click.echo(f"Error initializing OpenCode Monitor: {error_msg}", err=True)
+        click.echo(f"Error initializing OmO Monitor: {error_msg}", err=True)
         if verbose:
             click.echo(f"Details: {str(e)}", err=True)
         ctx.exit(1)
@@ -152,19 +171,26 @@ def session(ctx: click.Context, path: Optional[str], output_format: str):
 def sessions(
     ctx: click.Context, path: Optional[str], output_format: str, limit: Optional[int]
 ):
-    """Analyze all OpenCode sessions in a directory.
+    """Analyze all sessions from configured data source.
 
     PATH: Path to directory containing session folders
-          (defaults to configured messages directory)
+          (defaults to configured directory for the active data source)
+
+    Use --source to switch between opencode, claude-code, all, or auto.
     """
     config = ctx.obj["config"]
+    source_name = ctx.obj.get("source_name", "opencode")
 
-    if not path:
+    # Path is optional - data source will use its default
+    if not path and source_name == "opencode":
         path = config.paths.messages_dir
 
     try:
         analyzer = ctx.obj["analyzer"]
         report_generator = ctx.obj["report_generator"]
+
+        # Show data source info
+        click.echo(f"[Source: {source_name}]")
 
         if limit:
             sessions = analyzer.analyze_all_sessions(path, limit)
@@ -174,7 +200,7 @@ def sessions(
             click.echo(f"Analyzing {len(sessions)} sessions...")
 
         if not sessions:
-            click.echo("No sessions found in the specified directory.", err=True)
+            click.echo("No sessions found.", err=True)
             ctx.exit(1)
 
         result = report_generator.generate_sessions_summary_report(
@@ -245,9 +271,12 @@ def live(
     Use --minutes 0 to start with no history (fresh start for testing).
     """
     config = ctx.obj["config"]
+    data_source = ctx.obj["data_source"]
 
     # Set defaults and ensure non-None types
-    actual_path: str = path if path else config.paths.messages_dir
+    # Use data source's default path, fallback to OpenCode messages_dir
+    default_path = data_source.default_path or config.paths.messages_dir
+    actual_path: str = path if path else default_path
     actual_interval: int = (
         interval if interval is not None else config.ui.live_refresh_interval
     )
@@ -298,6 +327,7 @@ def live(
                 console,
                 session_max_hours=config.ui.session_max_hours,
                 limits_config=ctx.obj["limits_config"],
+                data_source=ctx.obj["data_source"],
             )
         else:
             console = ctx.obj["console"]
@@ -312,6 +342,7 @@ def live(
                 limits_config=ctx.obj["limits_config"],
                 refresh_interval=actual_interval,
                 hours_filter=hours_filter,
+                data_source=ctx.obj["data_source"],
             )
         else:
             console.print("[green]Starting live dashboard...[/green]")
