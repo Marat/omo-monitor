@@ -261,6 +261,13 @@ class CacheManager:
 
         file_mtime = interaction.file_path.stat().st_mtime
 
+        # Normalize provider and model IDs for consistent aggregation
+        from ..utils.normalization import get_canonical_provider_model
+        canonical_provider, normalized_model = get_canonical_provider_model(
+            interaction.provider_id,
+            interaction.model_id,
+        )
+
         conn.execute(
             """
             INSERT OR REPLACE INTO interactions
@@ -274,8 +281,8 @@ class CacheManager:
                 session_id,
                 source_type,
                 str(interaction.file_path),
-                interaction.model_id,
-                interaction.provider_id,
+                normalized_model,
+                canonical_provider,
                 interaction.agent,
                 interaction.category,
                 interaction.project_path,

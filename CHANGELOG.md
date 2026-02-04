@@ -1,9 +1,61 @@
 # Changelog
 
-All notable changes to OpenCode Monitor will be documented in this file.
+All notable changes to OmO Monitor will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.1.0] - 2026-02-04
+
+### Added
+
+#### DuckDB Cache System
+- **Persistent caching** with DuckDB for fast session loading
+- **Incremental updates** based on file modification time tracking
+- **Crash recovery** with progress checkpoints in `load_progress` table
+- **Background loading** for historical data gap filling
+- Cache location: `~/.cache/omo-monitor/cache.duckdb`
+
+#### Models.dev Integration
+- **Dynamic pricing** from Models.dev API (https://models.dev/api.json)
+- **Auto-sync on startup** - pricing updates daily
+- **3878+ models** supported from all major providers
+- **Local fallback** when API is unavailable
+- Cache TTL: 24 hours (configurable)
+
+#### Provider Normalization
+- **Consistent aggregation** across provider aliases
+- Mappings: `google-vertex-anthropic` → `anthropic`, `azure-openai` → `openai`, etc.
+- **Model ID normalization**: `claude-opus-4-5-20251101` → `claude-opus-4.5`
+
+#### New CLI Commands
+- `omo-monitor cache status` - Show cache statistics
+- `omo-monitor cache clear` - Clear all cached data
+- `omo-monitor cache rebuild` - Rebuild cache from sources
+- `omo-monitor cache sync` - Sync cache with current data
+- `omo-monitor pricing status` - Show pricing configuration
+- `omo-monitor pricing update` - Force refresh from Models.dev
+- `omo-monitor pricing list` - List all available model prices
+
+#### Windows Support
+- **install.bat** - Windows installation script
+- Cross-platform path handling
+- Windows-compatible configuration paths
+
+#### UI Improvements
+- **Real time range display** in live dashboard header (e.g., `14:30 → 16:45`)
+- Shows actual cutoff time instead of just duration
+
+### Changed
+- Configuration extended with `[cache]` and `[pricing]` sections
+- Default pricing source changed to `models.dev`
+
+### Technical
+- New modules: `omo_monitor/cache/`, `omo_monitor/pricing/`
+- New utility: `omo_monitor/utils/normalization.py`
+- Dependencies: `duckdb>=0.10.0`, `requests>=2.28.0`
+
+---
 
 ## [1.0.0] - 2025-01-XX
 

@@ -4,6 +4,10 @@ textual>=1.0.0
 pydantic>=2.0.0
 toml>=0.10.0
 watchfiles>=0.21.0
+duckdb>=0.10.0
+requests>=2.28.0
+
+# Development dependencies
 pytest>=7.0.0
 pytest-click>=1.1.0
 pytest-mock>=3.10.0

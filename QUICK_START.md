@@ -1,45 +1,64 @@
-# 🚀 Quick Start Guide
+# Quick Start Guide
 
-Get up and running with OpenCode Monitor in just a few minutes!
+Get up and running with OmO Monitor in just a few minutes!
 
-## 📋 Prerequisites
+## Prerequisites
 
 - Python 3.7 or higher
 - pip package manager
-- OpenCode session data (stored in `~/.local/share/opencode/storage/message/`)
+- AI coding session data from one or more sources:
+  - OpenCode: `~/.local/share/opencode/storage/message/`
+  - Claude Code: `~/.claude/projects/`
+  - Codex: `~/.codex/`
 
-## 🛠️ Installation
+## Installation
 
-### Option 1: Automated Installation (Recommended)
+### Linux/macOS
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/yourusername/omo-monitor.git
 cd omo-monitor
 
 # Run the installation script
 ./install.sh
 ```
 
-### Option 2: Manual Installation
+### Windows
+
+```cmd
+# Clone the repository
+git clone https://github.com/yourusername/omo-monitor.git
+cd omo-monitor
+
+# Run the installation script
+install.bat
+```
+
+### Manual Installation (All Platforms)
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/yourusername/omo-monitor.git
 cd omo-monitor
 
+# Create virtual environment (recommended)
+python -m venv venv
+
+# Activate virtual environment
+# Linux/macOS:
+source venv/bin/activate
+# Windows:
+venv\Scripts\activate
+
 # Install dependencies
-python3 -m pip install -r requirements.txt
+pip install -r requirements.txt
 
 # Install the package
-python3 -m pip install -e .
-
-# Add to PATH (if needed)
-echo 'export PATH="$(python3 -m site --user-base)/bin:$PATH"' >> ~/.bashrc
-source ~/.bashrc
+pip install -e .
 ```
 
-## 🎯 First Steps
+## First Steps
 
 ### 1. Check Configuration
 ```bash
@@ -48,11 +67,15 @@ omo-monitor config show
 
 ### 2. Analyze Your Sessions
 ```bash
-# Analyze all sessions (uses default OpenCode directory)
+# Analyze all sessions (auto-detects sources)
 omo-monitor sessions
 
-# Analyze a specific session
-omo-monitor session /path/to/specific/session
+# Use a specific source
+omo-monitor sessions --source claude-code
+omo-monitor sessions --source opencode
+
+# Analyze all sources combined
+omo-monitor sessions --source all
 ```
 
 ### 3. View Different Reports
@@ -67,7 +90,16 @@ omo-monitor models
 omo-monitor weekly
 ```
 
-### 4. Export Data
+### 4. Real-time Monitoring
+```bash
+# Start live dashboard (last 24 hours)
+omo-monitor live -H 24
+
+# Monitor all sources
+omo-monitor live --source all -H 24
+```
+
+### 5. Export Data
 ```bash
 # Export to CSV
 omo-monitor export sessions --format csv --output my_report.csv
@@ -76,46 +108,68 @@ omo-monitor export sessions --format csv --output my_report.csv
 omo-monitor export sessions --format json --output my_report.json
 ```
 
-### 5. Real-time Monitoring
+## Cache Management (v1.1.0+)
+
+OmO Monitor uses DuckDB for fast session loading:
+
 ```bash
-# Start live dashboard
-omo-monitor live
+# View cache status
+omo-monitor cache status
+
+# Clear cache
+omo-monitor cache clear
+
+# Rebuild cache from scratch
+omo-monitor cache rebuild
 ```
 
-## 📖 Common Commands
+## Pricing Management (v1.1.0+)
+
+Dynamic pricing from Models.dev API:
+
+```bash
+# View pricing configuration
+omo-monitor pricing status
+
+# Force refresh prices
+omo-monitor pricing update
+
+# List all available model prices
+omo-monitor pricing list
+```
+
+## Common Commands
 
 | Command | Description |
 |---------|-------------|
 | `omo-monitor --help` | Show all available commands |
 | `omo-monitor config show` | Display current configuration |
 | `omo-monitor sessions` | Analyze all sessions |
-| `omo-monitor session <path>` | Analyze a single session |
+| `omo-monitor sessions --source all` | Analyze from all sources |
 | `omo-monitor daily` | Daily usage breakdown |
 | `omo-monitor models` | Model usage analytics |
-| `omo-monitor live` | Real-time monitoring dashboard |
-| `omo-monitor export <type> --format <csv/json>` | Export data |
+| `omo-monitor live -H 24` | Real-time monitoring (24h) |
+| `omo-monitor cache status` | Show cache statistics |
+| `omo-monitor pricing update` | Refresh model prices |
 
-## 🎨 Output Formats
+## Data Sources
 
-All commands support different output formats:
+OmO Monitor supports multiple AI coding assistants:
 
-```bash
-# Rich tables (default)
-omo-monitor sessions
+| Source | Flag | Default Path |
+|--------|------|--------------|
+| OpenCode | `--source opencode` | `~/.local/share/opencode/storage/message/` |
+| Claude Code | `--source claude-code` | `~/.claude/projects/` |
+| Codex | `--source codex` | `~/.codex/` |
+| All Sources | `--source all` | All detected sources |
+| Auto-detect | `--source auto` | First available source |
 
-# JSON output
-omo-monitor sessions --format json
-
-# Export to files
-omo-monitor export sessions --format csv --output report.csv
-```
-
-## 🤔 Need Help?
+## Need Help?
 
 - Run `omo-monitor <command> --help` for specific command help
 - Check `MANUAL_TEST_GUIDE.md` for comprehensive usage examples
 - File an issue on GitHub if you encounter problems
 
-## 🎉 You're Ready!
+## You're Ready!
 
-Start exploring your OpenCode session data and gain insights into your AI-assisted coding patterns!
+Start exploring your AI coding session data and gain insights into your AI-assisted coding patterns!

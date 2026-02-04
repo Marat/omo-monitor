@@ -33,3 +33,27 @@ config_file = "models.json"
 default_timeframe = "daily"
 # Number of recent sessions to analyze by default
 recent_sessions_limit = 50
+# Default data source: "opencode", "claude-code", "codex", "crush", "all", "auto"
+default_source = "auto"
+
+[cache]
+# Enable DuckDB cache for fast session loading
+enabled = true
+# Path to cache database (supports ~ for home directory)
+db_path = "~/.cache/omo-monitor/cache.duckdb"
+# Consider data fresh if within this many minutes
+fresh_threshold_minutes = 30
+# Number of records to commit per batch
+batch_size = 100
+# Enable background syncing of historical data
+background_sync = true
+
+[pricing]
+# Pricing source: "local" (models.json), "models.dev" (API), "both"
+source = "models.dev"
+# Fall back to local pricing if Models.dev fails
+fallback_to_local = true
+# Hours to cache Models.dev pricing data
+cache_ttl_hours = 24
+# Models.dev API URL
+api_url = "https://models.dev/api.json"

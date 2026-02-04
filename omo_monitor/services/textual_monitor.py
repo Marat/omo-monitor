@@ -551,10 +551,11 @@ class AggregateMonitorApp(App):
                     stats["cost"] += file_cost
                     total_cost += file_cost
 
-                    provider_id = file.provider_id or (
-                        file.model_id.split("/")[0]
-                        if "/" in file.model_id
-                        else "unknown"
+                    # Normalize provider for consistent aggregation
+                    from ..utils.normalization import get_canonical_provider_model
+                    provider_id, model_name = get_canonical_provider_model(
+                        file.provider_id,
+                        file.model_id,
                     )
 
                     if provider_id not in provider_usage:
@@ -568,12 +569,7 @@ class AggregateMonitorApp(App):
                     provider_usage[provider_id]["tokens"] += file.tokens.total
                     provider_usage[provider_id]["cost"] += file_cost
 
-                    # Hierarchical tracking
-                    model_name = (
-                        file.model_id.split("/")[-1]
-                        if "/" in file.model_id
-                        else file.model_id
-                    )
+                    # Hierarchical tracking - model_name already normalized
                     agent_name = file.agent or "unknown"
                     category_name = file.category or "unknown"
 
@@ -639,6 +635,7 @@ class AggregateMonitorApp(App):
             "total_interactions": total_interactions,
             "recent_files": recent_files,
             "now": now,
+            "cutoff_time": cutoff,
             "error_count": self._error_count,
         }
         self._cached_data = result
@@ -653,13 +650,10 @@ class AggregateMonitorApp(App):
                 continue
 
             for file in session_data["files"]:
-                provider_id = file.provider_id or (
-                    file.model_id.split("/")[0] if "/" in file.model_id else "unknown"
-                )
-                model_name = (
-                    file.model_id.split("/")[-1]
-                    if "/" in file.model_id
-                    else file.model_id
+                from ..utils.normalization import get_canonical_provider_model
+                provider_id, model_name = get_canonical_provider_model(
+                    file.provider_id,
+                    file.model_id,
                 )
                 agent_name = file.agent or "unknown"
                 category_name = file.category or "unknown"
@@ -699,13 +693,10 @@ class AggregateMonitorApp(App):
                 continue
 
             for file in session_data["files"]:
-                provider_id = file.provider_id or (
-                    file.model_id.split("/")[0] if "/" in file.model_id else "unknown"
-                )
-                model_name = (
-                    file.model_id.split("/")[-1]
-                    if "/" in file.model_id
-                    else file.model_id
+                from ..utils.normalization import get_canonical_provider_model
+                provider_id, model_name = get_canonical_provider_model(
+                    file.provider_id,
+                    file.model_id,
                 )
                 agent_name = file.agent or "unknown"
                 category_name = file.category or "unknown"
@@ -745,6 +736,7 @@ class AggregateMonitorApp(App):
         total_interactions = data["total_interactions"]
         recent_files = data["recent_files"]
         now = data["now"]
+        cutoff_time = data.get("cutoff_time")
         error_count = data.get("error_count", 0)
 
         # Update available projects for filtering (sorted by cost)
@@ -756,17 +748,16 @@ class AggregateMonitorApp(App):
         status = "[green]NOMINAL[/green]"
         pause_status = "[yellow]PAUSED[/yellow]" if self.paused else ""
 
-        # Format time filter display
-        if self.hours_filter is not None:
-            if self.hours_filter < 0.017:  # ~1 minute
-                time_filter = "[cyan]fresh[/cyan]"
-            elif self.hours_filter < 1:
-                minutes = int(self.hours_filter * 60)
-                time_filter = f"[cyan]{minutes}m[/cyan]"
-            else:
-                time_filter = f"[cyan]{self.hours_filter:.0f}h[/cyan]"
+        # Format time range display with actual cutoff time
+        if cutoff_time:
+            cutoff_str = cutoff_time.strftime("%H:%M")
+            now_str = now.strftime("%H:%M")
+            # Show date if cutoff is on different day
+            if cutoff_time.date() != now.date():
+                cutoff_str = cutoff_time.strftime("%d.%m %H:%M")
+            time_range = f"[cyan]{cutoff_str}[/cyan] → [cyan]{now_str}[/cyan]"
         else:
-            time_filter = "[dim]today[/dim]"
+            time_range = "[dim]today[/dim]"
 
         # Error indicator
         error_indicator = ""
@@ -777,7 +768,7 @@ class AggregateMonitorApp(App):
             f"[bold white]${total_cost:.2f}[/bold white] [dim]cost[/dim]  "
             f"[dim]|[/dim]  [bold white]{total_sessions}[/bold white] [dim]sessions[/dim]  "
             f"[dim]|[/dim]  [bold white]{total_interactions:,}[/bold white] [dim]interactions[/dim]  "
-            f"[dim]|[/dim]  {time_filter}  "
+            f"[dim]|[/dim]  {time_range}  "
             f"[dim]|[/dim]  {status} {pause_status}{error_indicator}  "
             f"[dim]|[/dim]  [dim]{self.refresh_interval}s[/dim]"
         )

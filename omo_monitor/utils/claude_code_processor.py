@@ -27,22 +27,8 @@ def infer_provider_from_model(model_id: str) -> str:
     Returns:
         Provider ID (anthropic, openai, google, unknown)
     """
-    model_lower = model_id.lower()
-
-    if model_lower.startswith("claude"):
-        return "anthropic"
-    if model_lower.startswith(("gpt", "o1", "o3", "o4")):
-        return "openai"
-    if model_lower.startswith("gemini"):
-        return "google"
-    if model_lower.startswith("deepseek"):
-        return "deepseek"
-    if model_lower.startswith("qwen"):
-        return "alibaba"
-    if model_lower.startswith("mistral"):
-        return "mistral"
-
-    return "unknown"
+    from .normalization import infer_provider_from_model as _infer
+    return _infer(model_id)
 
 
 def normalize_claude_model_name(model_id: str) -> str:
@@ -56,17 +42,8 @@ def normalize_claude_model_name(model_id: str) -> str:
     Returns:
         Normalized model name
     """
-    model_id = model_id.lower()
-
-    # Strip date suffixes like -20250514, -20251101
-    model_id = re.sub(r"-\d{8}$", "", model_id)
-
-    # Normalize version separators: claude-opus-4-5 -> claude-opus-4.5
-    model_id = re.sub(
-        r"claude-(opus|sonnet|haiku)-(\d+)-(\d+)", r"claude-\1-\2.\3", model_id
-    )
-
-    return model_id
+    from .normalization import normalize_model_id
+    return normalize_model_id(model_id)
 
 
 class ClaudeCodeProcessor:

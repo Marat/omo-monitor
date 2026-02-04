@@ -2,10 +2,21 @@
 
 import click
 import json
+import sys
 from decimal import Decimal
 from pathlib import Path
 from typing import Optional, Dict, Any, Set
 from typing_extensions import TypedDict
+
+
+def get_spinner_name() -> str:
+    """Get spinner name compatible with current platform.
+
+    Returns ASCII-only spinner on Windows to avoid encoding issues.
+    """
+    if sys.platform == "win32":
+        return "line"  # ASCII-only: - \ | /
+    return "dots"  # Unicode dots (default)
 
 
 class ProjectStatsEntry(TypedDict):
@@ -77,6 +88,24 @@ def cli(ctx: click.Context, config: Optional[str], verbose: bool, source: Option
 
         ctx.obj["config"] = config_manager.config
         ctx.obj["pricing_data"] = config_manager.load_pricing_data()
+
+        # Auto-sync Models.dev pricing (if enabled and cache is stale)
+        pricing_config = ctx.obj["config"].pricing
+        if pricing_config.source in ("models.dev", "both"):
+            try:
+                from .pricing import get_pricing_provider
+                provider = get_pricing_provider(
+                    source=pricing_config.source,
+                    fallback_to_local=pricing_config.fallback_to_local,
+                    cache_ttl_hours=pricing_config.cache_ttl_hours,
+                )
+                # This will use cached data if fresh, or fetch if stale
+                provider.set_local_pricing(ctx.obj["pricing_data"])
+                models_dev_pricing = provider.get_models_dev_client().fetch_pricing()
+                if models_dev_pricing and verbose:
+                    click.echo(f"[Pricing: {len(models_dev_pricing)} models from Models.dev]")
+            except Exception:
+                pass  # Non-fatal, continue with local pricing
 
         # Initialize data source
         if source:
@@ -1883,7 +1912,7 @@ def cache_rebuild(ctx: click.Context, hours: int, source: Optional[str]):
 
         # Rebuild
         with Progress(
-            SpinnerColumn(),
+            SpinnerColumn(spinner_name=get_spinner_name()),
             TextColumn("[progress.description]{task.description}"),
             console=console,
         ) as progress:
@@ -1939,7 +1968,7 @@ def cache_sync(ctx: click.Context):
         loader = IncrementalLoader(cache_mgr, batch_size=config.cache.batch_size)
 
         with Progress(
-            SpinnerColumn(),
+            SpinnerColumn(spinner_name=get_spinner_name()),
             TextColumn("[progress.description]{task.description}"),
             console=console,
         ) as progress:

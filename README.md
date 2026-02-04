@@ -1,11 +1,12 @@
-# 📊 OpenCode Monitor
+# 📊 OmO Monitor
 
 [![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Platform: Windows/macOS/Linux](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-brightgreen.svg)]()
 
-**OpenCode Monitor is a CLI tool for monitoring and analyzing OpenCode AI coding sessions.**
+**OmO Monitor is a CLI tool for monitoring and analyzing AI coding sessions from multiple sources.**
 
-Transform your OpenCode usage data into beautiful, actionable insights with comprehensive analytics, real-time monitoring, and professional reporting capabilities.
+Supports **OpenCode**, **Claude Code**, **Codex**, and other AI coding assistants. Transform your AI usage data into beautiful, actionable insights with comprehensive analytics, real-time monitoring, and professional reporting capabilities.
 
 [![Sessions Summary Screenshot](screenshots/sessions-summary.png)](screenshots/sessions-summary.png)
 
@@ -31,23 +32,48 @@ Transform your OpenCode usage data into beautiful, actionable insights with comp
 - **🔄 JSON Export** - Machine-readable exports for custom integrations
 - **📊 Multiple Report Types** - Sessions, daily, weekly, monthly, model, and project reports
 
+### 🔌 Multi-Source Support
+- **OpenCode** - Full support for OpenCode session logs
+- **Claude Code** - JSONL session parsing from `~/.claude/projects`
+- **Codex** - Support for Codex CLI session data
+- **Auto-detection** - Automatically detects available data sources
+
+### 💾 DuckDB Cache (v1.1.0+)
+- **Fast Loading** - Persistent DuckDB cache for instant session queries
+- **Incremental Updates** - Only processes changed files
+- **Crash Recovery** - Resumes interrupted cache builds
+- **Background Sync** - Fills historical data gaps asynchronously
+
+### 💰 Dynamic Pricing (v1.1.0+)
+- **Models.dev Integration** - Real-time pricing for 3800+ AI models
+- **Auto-sync** - Daily automatic pricing updates
+- **Provider Normalization** - Consistent aggregation across provider aliases
+- **Local Fallback** - Works offline with cached pricing data
+
 ## 🚀 Quick Start
 
 ### Installation
 
-**Option 1: Automated Installation (Recommended)**
+**Linux/macOS: Automated Installation**
 ```bash
 git clone https://github.com/yourusername/omo-monitor.git
 cd omo-monitor
 ./install.sh
 ```
 
-**Option 2: Manual Installation**
+**Windows: Automated Installation**
+```cmd
+git clone https://github.com/yourusername/omo-monitor.git
+cd omo-monitor
+install.bat
+```
+
+**Manual Installation (All Platforms)**
 ```bash
 git clone https://github.com/yourusername/omo-monitor.git
 cd omo-monitor
-python3 -m pip install -r requirements.txt
-python3 -m pip install -e .
+python -m pip install -r requirements.txt
+python -m pip install -e .
 ```
 
 ### Basic Usage
@@ -56,17 +82,36 @@ python3 -m pip install -e .
 # Quick configuration check
 omo-monitor config show
 
-# Analyze your sessions
-omo-monitor sessions ~/.local/share/opencode/storage/message
+# Analyze sessions (auto-detects data sources)
+omo-monitor sessions
+
+# Analyze by specific source
+omo-monitor sessions --source claude-code
+omo-monitor sessions --source opencode
+
+# Analyze all sources combined
+omo-monitor sessions --source all
 
 # Analyze by project
-omo-monitor projects ~/.local/share/opencode/storage/message
+omo-monitor projects
 
-# Real-time monitoring
-omo-monitor live ~/.local/share/opencode/storage/message
+# Real-time monitoring (last 24 hours)
+omo-monitor live -H 24
+
+# Real-time monitoring with all sources
+omo-monitor live --source all -H 24
 
 # Export your data
-omo-monitor export sessions ~/.local/share/opencode/storage/message --format csv
+omo-monitor export sessions --format csv
+
+# Cache management (v1.1.0+)
+omo-monitor cache status    # Show cache statistics
+omo-monitor cache rebuild   # Rebuild from scratch
+
+# Pricing management (v1.1.0+)
+omo-monitor pricing status  # Show pricing configuration
+omo-monitor pricing update  # Force refresh from Models.dev
+omo-monitor pricing list    # List all available prices
 ```
 
 ## 📖 Documentation
@@ -197,6 +242,23 @@ colors = true
 [export]
 default_format = "csv"
 include_metadata = true
+
+[analytics]
+# Data source: "opencode", "claude-code", "codex", "all", "auto"
+default_source = "auto"
+
+[cache]
+# DuckDB cache for fast session loading
+enabled = true
+db_path = "~/.cache/omo-monitor/cache.duckdb"
+fresh_threshold_minutes = 30
+background_sync = true
+
+[pricing]
+# Pricing source: "local", "models.dev", "both"
+source = "models.dev"
+fallback_to_local = true
+cache_ttl_hours = 24
 ```
 
 **Configuration File Search Order:**
@@ -233,12 +295,24 @@ omo_monitor/
 ├── omo_monitor/              # Core package
 │   ├── cli.py             # Command-line interface
 │   ├── config.py          # Configuration management
+│   ├── cache/             # DuckDB cache module (v1.1.0+)
+│   │   ├── manager.py     # Cache operations
+│   │   ├── schema.py      # Database schema
+│   │   ├── loader.py      # Incremental/background loading
+│   │   └── progress.py    # Crash recovery
+│   ├── pricing/           # Pricing providers (v1.1.0+)
+│   │   ├── models_dev.py  # Models.dev API client
+│   │   └── provider.py    # Pricing abstraction
 │   ├── models/            # Pydantic data models
 │   ├── services/          # Business logic services
 │   ├── ui/                # Rich UI components
 │   └── utils/             # Utility functions
+│       ├── data_source.py # Multi-source abstraction
+│       └── normalization.py # Provider/model normalization
 ├── config.toml            # User configuration
-├── models.json            # AI model pricing data
+├── models.json            # Local AI model pricing
+├── install.sh             # Linux/macOS installer
+├── install.bat            # Windows installer
 └── test_sessions/         # Sample test data
 ```
 
